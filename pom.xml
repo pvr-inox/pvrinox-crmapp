@@ -68,6 +68,18 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-lang3</artifactId>
+    </dependency>
+    
+    <dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.11.0</version> <!-- Use the latest version -->
+		</dependency>
+
 <!-- 
 			<dependency>
 			<groupId>org.springframework.security</groupId>
