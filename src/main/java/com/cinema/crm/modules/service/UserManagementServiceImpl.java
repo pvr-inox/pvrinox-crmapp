@@ -1,0 +1,150 @@
+package com.cinema.crm.modules.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.cinema.crm.modules.entity.Modules;
+import com.cinema.crm.modules.entity.ModulesRepository;
+import com.cinema.crm.modules.entity.RoleRepository;
+import com.cinema.crm.modules.entity.Roles;
+import com.cinema.crm.modules.entity.UserRepository;
+import com.cinema.crm.modules.entity.Users;
+import com.cinema.crm.modules.model.ReqModule;
+import com.cinema.crm.modules.model.ReqRole;
+import com.cinema.crm.modules.model.ReqUser;
+import com.cinema.crm.modules.model.WSReturnObj;
+
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
+@Service
+public class UserManagementServiceImpl implements UserManagementService{
+	
+	private ModulesRepository modulesRepository;
+	private RoleRepository roleRepository;
+	private UserRepository userRepository;
+	
+	public UserManagementServiceImpl(ModulesRepository modulesRepository, RoleRepository roleRepository,
+			UserRepository userRepository) {
+		this.modulesRepository = modulesRepository;
+		this.roleRepository = roleRepository;
+		this.userRepository = userRepository;
+	}
+
+	@Override
+	public ResponseEntity<Object> createModule(ReqModule request) {
+		WSReturnObj<Object> returnObj = new WSReturnObj<>();
+		try {
+			if(!request.getModules().isEmpty()) {
+				int lastUnderscore = request.getModules().get(0).lastIndexOf("_");
+				String mainModuleName = (lastUnderscore != -1) ? request.getModules().get(0).substring(0, lastUnderscore) : request.getModules().get(0);
+				if(request.isUpdate()) {
+					modulesRepository.deleteByMainModuleName(mainModuleName);
+				}else{
+					Boolean exist = modulesRepository.existsByMainModuleName(mainModuleName);
+					if(exist) {
+						returnObj = WSReturnObj.builder().msg("error").output("Module Name Already Exist.Please Try To Update Access For This Module.").responseCode(204).result("error").build();
+						return ResponseEntity.ok(returnObj);
+					}
+				}
+				List<Modules> modulesList = new ArrayList<>();
+				for(String name : request.getModules()) {
+					Modules module = new Modules();
+					module.setModuleName(name);
+					module.setMainModuleName(mainModuleName);
+					modulesList.add(module);
+				}
+				modulesRepository.saveAll(modulesList);
+				returnObj = WSReturnObj.builder().msg("success").output("Module Created Sucessfully.").responseCode(200).result("sucess").build();
+				return ResponseEntity.ok(returnObj);
+			}
+			returnObj = WSReturnObj.builder().msg("error").output("Module Name Can Not Be Empty.").responseCode(204).result("error").build();
+			return ResponseEntity.ok(returnObj);
+		} catch (Exception e) {
+			log.error("Exception createModule {} : ",e);
+			returnObj = WSReturnObj.builder().msg("error").output("Error Occured Failed To Create Module").responseCode(500).result("error").build();
+			return ResponseEntity.ok(returnObj);
+		}
+	}
+	
+	@Override
+	public ResponseEntity<Object> getModule(){
+		WSReturnObj<Object> returnObj = new WSReturnObj<>();
+		List<Modules> modules = modulesRepository.findAll();
+		returnObj = WSReturnObj.builder().msg("success").output(modules).responseCode(200).result("sucess").build();
+		return ResponseEntity.ok(returnObj);
+	}
+	
+	@Override
+	public ResponseEntity<Object> createRole(ReqRole request){
+		WSReturnObj<Object> returnObj = new WSReturnObj<>();
+		Boolean exist = roleRepository.existsByRoleName(request.getRoleName());
+		if (exist) {
+			if (request.isUpdate()) {
+				Roles roles = roleRepository.findByRoleName(request.getRoleName());
+				roles.setModules(request.getModuleNames());
+				roleRepository.save(roles);
+				returnObj = WSReturnObj.builder().msg("success").output("Role Updated Successfully.").responseCode(200).result("sucess").build();
+				return ResponseEntity.ok(returnObj);
+			} else {
+				returnObj = WSReturnObj.builder().msg("error").output("Role Already Exist").responseCode(204).result("error").build();
+				return ResponseEntity.ok(returnObj);
+			}
+		} else {
+			Roles roles = new Roles();
+			roles.setRoleName(request.getRoleName());
+			roles.setModules(request.getModuleNames());
+			roleRepository.save(roles);
+			returnObj = WSReturnObj.builder().msg("success").output("Role Created Successfully.").responseCode(200).result("sucess").build();
+			return ResponseEntity.ok(returnObj);
+		}
+	}
+	
+	@Override
+	public ResponseEntity<Object> getRole(){
+		WSReturnObj<Object> returnObj = new WSReturnObj<>();
+		List<Roles> roles = roleRepository.findAll();
+		returnObj = WSReturnObj.builder().msg("success").output(roles).responseCode(200).result("sucess").build();
+		return ResponseEntity.ok(returnObj);
+	}
+	
+	@Override
+	public ResponseEntity<Object> createUser(ReqUser request){
+		WSReturnObj<Object> returnObj = new WSReturnObj<>();
+		boolean userExist = userRepository.existsByUserId(request.getUserId());
+		if(userExist) {
+			if(request.isUpdate()) {
+				Users users = userRepository.findByUserId(request.getUserId());
+				users.setEmail(request.getEmail());
+				users.setMobile(request.getMobile());
+				users.setUserFirstName(request.getUserFirstName());
+				users.setUserLastName(request.getUserLastName());
+				users.setUserRole(request.getUserRole());
+				users.setStatus(request.isStatus());
+				userRepository.save(users);
+				returnObj = WSReturnObj.builder().msg("success").output("User Updated Successfully.").responseCode(204).result("success").build();
+				return ResponseEntity.ok(returnObj);
+			}else {
+				returnObj = WSReturnObj.builder().msg("error").output("User Already Exist With This User Id.").responseCode(204).result("error").build();
+				return ResponseEntity.ok(returnObj);
+			}
+		}else {
+			Users users = Users.builder().userFirstName(request.getUserFirstName()).userLastName(request.getUserLastName()).email(request.getEmail()).mobile(request.getMobile()).userRole(request.getUserRole()).status(true).build();
+			userRepository.save(users);
+			returnObj = WSReturnObj.builder().msg("success").output("User Created Successfully.").responseCode(200).result("sucess").build();
+			return ResponseEntity.ok(returnObj);
+		}
+	}
+	
+	@Override
+	public ResponseEntity<Object> getUser(){
+		WSReturnObj<Object> returnObj = new WSReturnObj<>();
+		List<Users> users = userRepository.findAll();
+		returnObj = WSReturnObj.builder().msg("success").output(users).responseCode(200).result("sucess").build();
+		return ResponseEntity.ok(returnObj);
+	}
+
+}
