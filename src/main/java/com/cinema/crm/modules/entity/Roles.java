@@ -29,5 +29,6 @@ public class Roles {
 	private String modules;
 	@CreationTimestamp @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
 	private Timestamp createdAt;
+	private Boolean status;
 
 }

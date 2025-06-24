@@ -5,12 +5,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cinema.crm.modules.model.ReqModule;
 import com.cinema.crm.modules.model.ReqRole;
 import com.cinema.crm.modules.model.ReqUser;
 import com.cinema.crm.modules.service.UserManagementService;
+
+/**
+ * This @class is used to manage user, module and role.
+ * @author sagar.gaikwad
+ * @version 1.0
+ */
 
 @RestController
 @RequestMapping("/api/v1/user/")
@@ -28,8 +35,8 @@ public class UserController {
 	}
 	
 	@GetMapping(value = "getModule")
-	public ResponseEntity<Object> getModule(){
-		return userManagementService.getModule();
+	public ResponseEntity<Object> getModule(@RequestParam(name = "page", defaultValue = "0") int page,@RequestParam(name = "size", defaultValue = "10") int size){
+		return userManagementService.getModule(page,size);
 	}
 	
 	@PostMapping(value = "createRole")
@@ -48,8 +55,8 @@ public class UserController {
 	}
 	
 	@GetMapping(value = "getUser")
-	public ResponseEntity<Object> getUser(){
-		return userManagementService.getUser();
+	public ResponseEntity<Object> getUser(@RequestParam(name = "page", defaultValue = "0") int page,@RequestParam(name = "size", defaultValue = "10") int size){
+		return userManagementService.getUser(page,size);
 	}
 
 }

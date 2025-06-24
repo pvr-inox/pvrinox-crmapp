@@ -10,7 +10,7 @@ public interface UserManagementService {
 	
 	 ResponseEntity<Object> createModule(ReqModule request);
 	
-	 ResponseEntity<Object> getModule();
+	 ResponseEntity<Object> getModule(int page, int size);
 	
 	 ResponseEntity<Object> createRole(ReqRole request);
 	
@@ -18,6 +18,6 @@ public interface UserManagementService {
 	 
 	 ResponseEntity<Object> createUser(ReqUser request);
 	 
-	 ResponseEntity<Object> getUser();
+	 ResponseEntity<Object> getUser(int page, int size);
 
 }

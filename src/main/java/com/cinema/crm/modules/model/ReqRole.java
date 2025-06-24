@@ -10,4 +10,5 @@ public class ReqRole {
 	public boolean update;
 	public String roleName;
 	public String moduleNames;
+	public boolean status;
 }
