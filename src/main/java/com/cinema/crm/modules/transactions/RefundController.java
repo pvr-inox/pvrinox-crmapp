@@ -2,6 +2,7 @@ package com.cinema.crm.modules.transactions;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,8 +19,8 @@ public class RefundController {
 		this.transactionService = transactionService;
 	}
 	
-	@PostMapping(value = "signleRefund")
-	public ResponseEntity<Object> signleRefund(SingleRefundReq singleRefundReq){
+	@PostMapping("signleRefund")
+	public ResponseEntity<Object> signleRefund(@RequestBody SingleRefundReq singleRefundReq){
 		return transactionService.signleRefund(singleRefundReq);
 	}
 
