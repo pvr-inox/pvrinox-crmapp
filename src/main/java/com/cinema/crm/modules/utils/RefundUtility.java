@@ -30,6 +30,17 @@ public class RefundUtility {
     private String JUSPAY_USERNAME;
     @Value("${juspay.password}")
     private String JUSPAY_PASSWORD;
+    @Value("${giftcard.url}")
+    private String GIFTCARD_API_URL;
+    @Value("${giftcard.terminalid}")
+    private String GIFTCARD_TERMINAL_ID;
+    @Value("${giftcard.username}")
+    private String GIFTCARD_USERNAME;
+    @Value("${giftcard.password}")
+    private String GIFTCARD_PASSWORD;
+    @Value("${giftcard.transactionid}")
+    private int GIFTCARD_TRANSACTION_ID;
+
  
     @Value("${timeout.juspay}") private long JUSPAY_TIMEOUT;
     
@@ -64,4 +75,44 @@ public class RefundUtility {
         }
         return orderStatusVO;
     }
+    
+    private Map<String, String> getGiftCardHeaders() {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Content-Type", "application/json");
+        return headers;
+    }
+    
+    public Map<String, Object> generateGiftCardToken() {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("terminalId", GIFTCARD_TERMINAL_ID);
+            payload.put("userName", GIFTCARD_USERNAME);
+            payload.put("password", GIFTCARD_PASSWORD);
+            payload.put("transactionId", 1);
+            payload.put("DateAtClient", "2025-06-25 15:30:00");
+
+            String response = httpUtil.invokePost(GIFTCARD_API_URL +"/authorize", getGiftCardHeaders(), new Gson().toJson(payload), "application/json", "", JUSPAY_TIMEOUT);
+            
+            log.debug("Gift card token response :: {}", response);
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            Map<String, Object> responseMap = mapper.readValue(response, Map.class); 
+
+            return responseMap;
+        } catch (Exception e) {
+            log.error("exception occured in generating gift card token: ", e);
+        }
+        return null;
+    }
+    
+    public Object cancelGiftCard() {
+    	try {
+    	
+    	
+    	} catch (Exception e) {
+            log.error("exception occured in cancelling gift card: ", e);
+        }
+    	return null;
+    }
+
 }

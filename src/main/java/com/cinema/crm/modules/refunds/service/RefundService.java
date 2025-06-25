@@ -6,5 +6,9 @@ import com.cinema.crm.modules.model.SingleRefundReq;
 
 public interface RefundService {
 
+
 	ResponseEntity<Object> initiateRefund(SingleRefundReq singleRefundReq);
+
+	ResponseEntity<Object> generateGiftCardToken();
+
 }

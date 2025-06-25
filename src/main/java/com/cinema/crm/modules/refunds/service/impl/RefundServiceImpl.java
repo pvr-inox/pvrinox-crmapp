@@ -1,6 +1,8 @@
 package com.cinema.crm.modules.refunds.service.impl;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,8 @@ import com.cinema.crm.constants.InitiateRefundResponse;
 import com.cinema.crm.constants.Constants.Message;
 import com.cinema.crm.constants.Constants.RespCode;
 import com.cinema.crm.constants.Constants.Result;
+import com.cinema.crm.modules.entity.Configuration;
+import com.cinema.crm.modules.entity.ConfigurationRepository;
 import com.cinema.crm.modules.entity.Email;
 import com.cinema.crm.modules.entity.NotificationTemplate;
 import com.cinema.crm.modules.entity.RefundDetails;
@@ -24,6 +28,7 @@ import com.cinema.crm.modules.repository.RefundDetailsRepository;
 import com.cinema.crm.modules.repository.TransactionsRepository;
 import com.cinema.crm.modules.utils.EmailUtil;
 import com.cinema.crm.modules.utils.RefundUtility;
+import com.google.gson.Gson;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -36,15 +41,17 @@ public class RefundServiceImpl implements RefundService {
 	private final RefundUtility refundUtility;
 	private final EmailUtil emailUtil;
 	private final NotificationTemplateRepository notificationTemplateRepository;
+	private final ConfigurationRepository configurationRepository;
 	
 	public RefundServiceImpl(TransactionsRepository transactionsRepository,
 			RefundDetailsRepository refundDetailsRepository,RefundUtility refundUtility,EmailUtil emailUtil,
-			NotificationTemplateRepository notificationTemplateRepository) {
+			NotificationTemplateRepository notificationTemplateRepository,ConfigurationRepository configurationRepository) {
 		this.transactionsRepository = transactionsRepository;
 		this.refundDetailsRepository = refundDetailsRepository;
 		this.refundUtility = refundUtility;
 		this.emailUtil = emailUtil;
 		this.notificationTemplateRepository = notificationTemplateRepository;
+		this.configurationRepository = configurationRepository;
 	}
 
 	@Override
@@ -133,6 +140,44 @@ public class RefundServiceImpl implements RefundService {
 		JuspayOrderStatus orderStatus = refundUtility.juspayOrderStatus(bookingId);
 		
 	}
+	
+	private void cancelGiftCard() {
+		try {
+		
+			refundUtility.cancelGiftCard();
+		
+			
+			
+			
+		} catch (Exception e) {
+			log.error("GIFT CARD ERROR: ", e);
+		}
+		
+		
+	}
+	
+	@Override
+	public ResponseEntity<Object> generateGiftCardToken() {
+		String authToken = "";
+		try {
+			Map<String, Object> tokenResponse = refundUtility.generateGiftCardToken();
+			log.info("Token response: " ,new Gson().toJson(tokenResponse));
+			if(Objects.nonNull(tokenResponse) && 0 == (int) tokenResponse.get("responseCode") && "Transaction successful.".equalsIgnoreCase((String) tokenResponse.get("responseMessage"))){
+				authToken = (String) tokenResponse.get("authToken");
+				Configuration value = configurationRepository.findByName("GIFT_CARD_TOKEN");
+				if(Objects.nonNull(value)) value.setValue(authToken);
+				configurationRepository.save(value);
+			}else {
+				ResponseEntity.ok(null);
+			}
+			return ResponseEntity.ok(tokenResponse);
+		} catch (Exception e) {
+			log.error("GIFT CARD ERROR: ", e);
+		}
+		return ResponseEntity.ok(null);
+	}
+	
+	
 
 
 }
