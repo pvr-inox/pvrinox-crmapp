@@ -39,7 +39,7 @@ public class RefundUtility {
 		this.httpUtil = httpUtil;
 	}
 
-	private Map<String, String> getHeaders() {
+	private Map<String, String> getJuspayHeaders() {
         Map<String, String> headers = new HashMap<String, String>();
         headers.put("Accept", "application/json");
         headers.put("Authorization", "Basic " + JUSPAY_API_KEY);
@@ -51,7 +51,7 @@ public class RefundUtility {
     public JuspayOrderStatus juspayOrderStatus(String bookingid) {
         JuspayOrderStatus orderStatusVO = null;
         try {
-        	 String response = httpUtil.invoke(JUSPAY_API_URL + "orders/" + bookingid, getHeaders(), String.valueOf(bookingid), JUSPAY_TIMEOUT);
+        	 String response = httpUtil.invoke(JUSPAY_API_URL + "orders/" + bookingid, getJuspayHeaders(), String.valueOf(bookingid), JUSPAY_TIMEOUT);
             log.debug("JUSPAY ORDER STATUS RESPONSE FOR BOOKING ID :: {} :: {}", bookingid, response);
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

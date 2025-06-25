@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cinema.crm.modules.model.SingleRefundReq;
 import com.cinema.crm.modules.refunds.service.RefundService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/v1/refund/")
 public class RefundController {
@@ -20,7 +22,7 @@ public class RefundController {
 	}
 
 	@PostMapping("signleRefund")
-	public ResponseEntity<Object> signleRefund(@RequestBody SingleRefundReq singleRefundReq){
+	public ResponseEntity<Object> signleRefund(@RequestBody SingleRefundReq singleRefundReq, HttpServletRequest servletRequest){
 		return refundService.signleRefund(singleRefundReq);
 	}
 
