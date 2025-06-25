@@ -160,43 +160,6 @@ public class TransactionServiceImpl implements TransactionService {
 		}
 	}
 
-	@Override
-	public ResponseEntity<Object> signleRefund(SingleRefundReq singleRefundReq) {
-		WSReturnObj<Object> returnObj = new WSReturnObj<>();
-		Optional<Transactions> opsTransactions = transactionsRepository.findById(singleRefundReq.getBookingId());
-		if (opsTransactions.isPresent()) {
-			RefundDetails refundDetails = RefundDetails.builder()
-					.bookingId(singleRefundReq.getBookingId())
-					.eventName(singleRefundReq.eventName)
-					.customerName(singleRefundReq.getCustomerName())
-					.refundType(singleRefundReq.getRefundType())
-					.refundReasons(singleRefundReq.getRefundReasons())
-					.totalAmount(singleRefundReq.getTotalAmount())
-					.refundAmount(singleRefundReq.getRefundAmount())
-					.refund(singleRefundReq.getRefund())
-					.paymentGateway(singleRefundReq.getPaymentGateway())
-					.remarks(singleRefundReq.getRemarks())
-					.refundStatus(Constants.INITIATE)
-					.build();
-			refundDetailsRepository.save(refundDetails);
-			
-			
-			return ResponseEntity.ok(InitiateRefundResponse.builder()
-					.bookingId(singleRefundReq.getBookingId())
-					.result(Result.SUCCESS)
-					.responseCode(RespCode.SUCCESS)
-					.message(Message.REQUESTED_NODAL_OFFICER)
-					.build());
-			
-		}
-
-		return ResponseEntity.ok(InitiateRefundResponse.builder()
-				.bookingId(singleRefundReq.getBookingId())
-				.result(Result.ERROR)
-				.responseCode(RespCode.NO_DATA_FOUND)
-				.message(Message.BOOKING_NOT_FOUNDED)
-				.build());
-	}
 
 	@Override
 	public ResponseEntity<Object> getSessionTtrans(long sessionId) {

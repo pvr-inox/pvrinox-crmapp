@@ -1,4 +1,4 @@
-package com.cinema.crm.modules.transactions;
+package com.cinema.crm.modules.refunds.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -7,21 +7,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cinema.crm.modules.model.SingleRefundReq;
-import com.cinema.crm.modules.service.TransactionService;
+import com.cinema.crm.modules.refunds.service.RefundService;
 
 @RestController
 @RequestMapping("/api/v1/refund/")
 public class RefundController {
 
-	private final TransactionService transactionService;
-
-	public RefundController(TransactionService transactionService) {
-		this.transactionService = transactionService;
-	}
+	private final RefundService refundService;
 	
+	public RefundController(RefundService refundService) {
+		this.refundService = refundService;
+	}
+
 	@PostMapping("signleRefund")
 	public ResponseEntity<Object> signleRefund(@RequestBody SingleRefundReq singleRefundReq){
-		return transactionService.signleRefund(singleRefundReq);
+		return refundService.signleRefund(singleRefundReq);
 	}
 
 }

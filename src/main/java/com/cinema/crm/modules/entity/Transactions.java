@@ -149,6 +149,7 @@ public class Transactions {
     private Boolean flexiApply;
     private Long flexiTicketPrice;
     private Long ticketsRefunded;
+    private String refundStatus;
 
     @Column(columnDefinition = "json")
     private String ticketInvoiceData;
