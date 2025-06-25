@@ -6,5 +6,5 @@ import com.cinema.crm.modules.model.SingleRefundReq;
 
 public interface RefundService {
 
-	ResponseEntity<Object> signleRefund(SingleRefundReq singleRefundReq);
+	ResponseEntity<Object> initiateRefund(SingleRefundReq singleRefundReq);
 }

@@ -48,12 +48,11 @@ public class RefundServiceImpl implements RefundService {
 	}
 
 	@Override
-	public ResponseEntity<Object> signleRefund(SingleRefundReq singleRefundReq) {
-		WSReturnObj<Object> returnObj = new WSReturnObj<>();
+	public ResponseEntity<Object> initiateRefund(SingleRefundReq singleRefundReq) {
 		Optional<Transactions> opsTransactions = transactionsRepository.findById(singleRefundReq.getBookingId());
 		if (opsTransactions.isPresent()) {
 			Transactions transactions = opsTransactions.get();
-			if (Constants.REFUND_INITIATE.equals(transactions.getRefundStatus())) {
+			if (Constants.REFUND_INITIATE.equals(transactions.getPaymentStatus())) {
 				return ResponseEntity.ok(InitiateRefundResponse.builder()
 						.bookingId(singleRefundReq.getBookingId())
 						.result(Result.ERROR)
@@ -62,12 +61,12 @@ public class RefundServiceImpl implements RefundService {
 						.build());
 			}
 			
-			if (Constants.REFUND_COMPLETED.equals(transactions.getRefundStatus())) {
+			if (Constants.ROLLEDBACK.equals(transactions.getPaymentStatus())) {
 				return ResponseEntity.ok(InitiateRefundResponse.builder()
 						.bookingId(singleRefundReq.getBookingId())
 						.result(Result.SUCCESS)
 						.responseCode(RespCode.SUCCESS)
-						.message(Message.ALREADY_PROCESSED_NODAL_OFFICER)
+						.message(Message.ALREADY_PROCESSED)
 						.build());
 			}
 			
@@ -85,7 +84,8 @@ public class RefundServiceImpl implements RefundService {
 					.refundStatus(Constants.REFUND_INITIATE)
 					.build();
 			
-			//TODO EMAIL SEND TO NODAL OFFICER
+			// TODO EMAIL SEND TO NODAL OFFICER
+			// TODO CHECK THE ROLE OF THE USER EITHER CRM EXUCATIVE EITHER RGM, PROCESS THE REQUEST AS PER ROLE
 			Optional<NotificationTemplate> opsNotificationTemplate = notificationTemplateRepository.findById("REFUND_APPROVAL");
 			if (opsNotificationTemplate.isPresent()) {
 				NotificationTemplate template = opsNotificationTemplate.get();
@@ -105,7 +105,7 @@ public class RefundServiceImpl implements RefundService {
 				
 				emailUtil.send(email);
 				refundDetailsRepository.save(refundDetails);
-				transactions.setRefundStatus(Constants.REFUND_INITIATE);
+				transactions.setPaymentStatus(Constants.REFUND_INITIATE);
 				transactionsRepository.save(transactions);
 			}
 			

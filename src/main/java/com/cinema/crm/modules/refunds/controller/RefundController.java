@@ -21,9 +21,13 @@ public class RefundController {
 		this.refundService = refundService;
 	}
 
-	@PostMapping("signleRefund")
-	public ResponseEntity<Object> signleRefund(@RequestBody SingleRefundReq singleRefundReq, HttpServletRequest servletRequest){
+	@PostMapping("initiate-refund")
+	public ResponseEntity<Object> initiateRefund(@RequestBody SingleRefundReq singleRefundReq, HttpServletRequest servletRequest){
 		return refundService.signleRefund(singleRefundReq);
 	}
 
+	@PostMapping("approve-refund")
+	public ResponseEntity<Object> signleRefund(@RequestBody SingleRefundReq singleRefundReq, HttpServletRequest servletRequest){
+		return refundService.signleRefund(singleRefundReq);
+	}
 }
