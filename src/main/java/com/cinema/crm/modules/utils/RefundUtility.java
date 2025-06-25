@@ -48,7 +48,7 @@ public class RefundUtility {
         return headers;
     }
     
-    public JuspayOrderStatus orderStatus(String bookingid) {
+    public JuspayOrderStatus juspayOrderStatus(String bookingid) {
         JuspayOrderStatus orderStatusVO = null;
         try {
         	 String response = httpUtil.invoke(JUSPAY_API_URL + "orders/" + bookingid, getHeaders(), String.valueOf(bookingid), JUSPAY_TIMEOUT);

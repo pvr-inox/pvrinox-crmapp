@@ -130,7 +130,7 @@ public class RefundServiceImpl implements RefundService {
 	}
 
 	private void juspay(String bookingId) {
-		JuspayOrderStatus orderStatus = refundUtility.orderStatus(bookingId);
+		JuspayOrderStatus orderStatus = refundUtility.juspayOrderStatus(bookingId);
 		
 	}
 
