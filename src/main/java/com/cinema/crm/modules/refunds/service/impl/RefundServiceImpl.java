@@ -48,22 +48,17 @@ public class RefundServiceImpl implements RefundService {
 	private final NotificationTemplateRepository notificationTemplateRepository;
 	private final ConfigurationRepository configurationRepository;
 	
-	public RefundServiceImpl(TransactionsRepository transactionsRepository,
-			RefundDetailsRepository refundDetailsRepository,RefundUtility refundUtility,EmailUtil emailUtil,
-			NotificationTemplateRepository notificationTemplateRepository,ConfigurationRepository configurationRepository) {
 	private final JuspayRedeemDetailRepository juspayRedeemDetailRepository;
 	
 	public RefundServiceImpl(TransactionsRepository transactionsRepository,
 			RefundDetailsRepository refundDetailsRepository,RefundUtility refundUtility,EmailUtil emailUtil,
 			NotificationTemplateRepository notificationTemplateRepository,
-			JuspayRedeemDetailRepository juspayRedeemDetailRepository) {
-				
+			JuspayRedeemDetailRepository juspayRedeemDetailRepository, ConfigurationRepository configurationRepository) {
 		this.transactionsRepository = transactionsRepository;
 		this.refundDetailsRepository = refundDetailsRepository;
 		this.refundUtility = refundUtility;
 		this.emailUtil = emailUtil;
 		this.notificationTemplateRepository = notificationTemplateRepository;
-
 		this.configurationRepository = configurationRepository;
 
 		this.juspayRedeemDetailRepository = juspayRedeemDetailRepository;
