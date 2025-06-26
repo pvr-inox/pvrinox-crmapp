@@ -1,12 +1,16 @@
 package com.cinema.crm.modules.utils;
 
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.cinema.crm.modules.entity.Configuration;
+import com.cinema.crm.modules.entity.ConfigurationRepository;
 import com.cinema.crm.modules.model.JuspayOrderStatus;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,9 +49,11 @@ public class RefundUtility {
     @Value("${timeout.juspay}") private long JUSPAY_TIMEOUT;
     
     private final HttpUtil httpUtil;
+    private final ConfigurationRepository configurationRepository;
     
-    public RefundUtility(HttpUtil httpUtil) {
+    public RefundUtility(HttpUtil httpUtil,ConfigurationRepository configurationRepository) {
 		this.httpUtil = httpUtil;
+		this.configurationRepository = configurationRepository;
 	}
 
 	private Map<String, String> getJuspayHeaders() {
@@ -89,10 +95,11 @@ public class RefundUtility {
             payload.put("userName", GIFTCARD_USERNAME);
             payload.put("password", GIFTCARD_PASSWORD);
             payload.put("transactionId", 1);
-            payload.put("DateAtClient", "2025-06-25 15:30:00");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime now = LocalDateTime.now();
+            payload.put("DateAtClient", now.format(formatter));
 
             String response = httpUtil.invokePost(GIFTCARD_API_URL +"/authorize", getGiftCardHeaders(), new Gson().toJson(payload), "application/json", "", JUSPAY_TIMEOUT);
-            
             log.debug("Gift card token response :: {}", response);
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -105,14 +112,47 @@ public class RefundUtility {
         return null;
     }
     
-    public Object cancelGiftCard() {
-    	try {
-    	
-    	
-    	} catch (Exception e) {
-            log.error("exception occured in cancelling gift card: ", e);
-        }
-    	return null;
-    }
+	public Map<String, Object> cancelGiftCard(String transactionId, String cardNumber, String originalAmount,
+			String invoiceNumber, String originalTransactionId, String originalBatchNumber, String originalApprovalCode,
+			String idempotencyKey) {
+		try {
+			Map<String, Object> payload = new HashMap<>();
+			payload.put("TransactionId", transactionId);
+			payload.put("CardNumber", cardNumber);
+			payload.put("OriginalAmount", originalAmount);
+			payload.put("InvoiceNumber", invoiceNumber);
+			payload.put("OriginalTransactionId", originalTransactionId);
+			payload.put("OriginalBatchNumber", originalBatchNumber);
+			payload.put("OriginalApprovalCode", originalApprovalCode);
+			payload.put("Notes", "cancel txn");
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	        LocalDateTime now = LocalDateTime.now();
+			payload.put("DateAtClient", now.format(formatter));
+			payload.put("Idempotencykey", idempotencyKey);
+			
+			Configuration value = configurationRepository.findByName("GIFT_CARD_TOKEN");
+			
+			 Map<String, String> headers = new HashMap<String, String>();
+		        headers.put("Content-Type", "application/json");
+		        headers.put("Authorization", "Bearer " + value.getValue());
+
+			String url = GIFTCARD_API_URL + "/gc/cancelredeem";
+
+			String response = httpUtil.invokePost(url, headers, new Gson().toJson(payload),
+					"application/json", "", JUSPAY_TIMEOUT);
+
+			log.debug("Gift card cancelRedeem response :: {}", response);
+
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			Map<String, Object> responseMap = mapper.readValue(response, Map.class);
+
+			return responseMap;
+		} catch (Exception e) {
+			log.error("exception occurred in cancelling gift card: ", e);
+		}
+		return null;
+	}
+
 
 }

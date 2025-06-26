@@ -141,19 +141,26 @@ public class RefundServiceImpl implements RefundService {
 		
 	}
 	
-	private void cancelGiftCard() {
+	private Object cancelGiftCard(String transactionId, String cardNumber, String originalAmount,
+			String invoiceNumber, String originalTransactionId, String originalBatchNumber, String originalApprovalCode,
+			String idempotencyKey) {
 		try {
-		
-			refundUtility.cancelGiftCard();
-		
-			
-			
+			Map<String, Object> cancelResponse = refundUtility.cancelGiftCard(transactionId, cardNumber, originalAmount,
+					invoiceNumber, originalTransactionId, originalBatchNumber, originalApprovalCode, idempotencyKey);
+			if (Objects.nonNull(cancelResponse) && 0 == (int) cancelResponse.get("ResponseCode")
+					&& "Transaction successful.".equalsIgnoreCase((String) cancelResponse.get("ResponseMessage"))) {
+				log.info("cancel gift card success response: " ,new Gson().toJson(cancelResponse));
+				
+			}else{
+				log.info("cancel gift card failed response: " ,new Gson().toJson(cancelResponse));
+			}
+			return cancelResponse;
 			
 		} catch (Exception e) {
 			log.error("GIFT CARD ERROR: ", e);
 		}
 		
-		
+		return null;
 	}
 	
 	@Override
@@ -167,6 +174,8 @@ public class RefundServiceImpl implements RefundService {
 				Configuration value = configurationRepository.findByName("GIFT_CARD_TOKEN");
 				if(Objects.nonNull(value)) value.setValue(authToken);
 				configurationRepository.save(value);
+				
+				cancelGiftCard("6950748", "6699960102004658", "1", "200250006950748679", "6950748", "14652027", "116272471", "1750856331874");
 			}else {
 				ResponseEntity.ok(null);
 			}
