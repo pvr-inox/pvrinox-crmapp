@@ -33,9 +33,9 @@ public class RefundDetails {
     @Column(name = "refund_status")
     public String refundStatus;
     public String refundReasons;
-    public double totalAmount;
-    public double refundAmount;
-    public double refund;
+    public String totalAmount;
+    public String refundAmount;
+    public String refund;
     public String paymentGateway;
     public String remarks;
 

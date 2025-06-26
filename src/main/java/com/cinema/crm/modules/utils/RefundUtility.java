@@ -85,7 +85,7 @@ public class RefundUtility {
         JuspayOrderStatus orderStatusVO = null;
         try {
         	 String response = httpUtil.invoke(JUSPAY_API_URL + "orders/" + bookingid, juspayGetHeaders(), String.valueOf(bookingid), JUSPAY_TIMEOUT);
-            log.debug("JUSPAY ORDER STATUS RESPONSE FOR BOOKING ID :: {} :: {}", bookingid, response);
+            log.debug("juspay order status response for booking id :: {} :: {}", bookingid, response);
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             orderStatusVO = mapper.readValue(response, JuspayOrderStatus.class);
@@ -178,14 +178,14 @@ public class RefundUtility {
         JuspayRefundResponse refundResponseVO = null;
         try {
             String response = httpUtil.invokePost(JUSPAY_API_URL + "orders/" + bookingid + "/refunds", juspayPostHeaders(), (new Gson()).toJson(request), "application/json", bookingid, JUSPAY_TIMEOUT);
-            log.debug("JUSPAY ORDER REFUND RESPONSE FOR BOOKING ID :: {} :: {}", bookingid, response);
+            log.debug("juspay order refund response for booking id :: {} :: {}", bookingid, response);
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             refundResponseVO = mapper.readValue(response, JuspayRefundResponse.class);
-            log.debug("JUSPAY ORDER REFUND RESPONSE AFTER MAPPING FOR BOOKING ID :: {} :: {}", bookingid, new Gson().toJson(refundResponseVO));
+            log.debug("juspay order refund response after mapping for booking id :: {} :: {}", bookingid, new Gson().toJson(refundResponseVO));
             return refundResponseVO;
         } catch (Exception e) {
-        	log.error("EXCEPTION OCCURED IN JUSPAY ORDER RESFUND FOR BOOKING ID :: {} :: {}", bookingid, e.getMessage());
+        	log.error("exception occured in juspay order resfund for booking id :: {} :: {}", bookingid, e.getMessage());
         }
         return refundResponseVO;
     }
