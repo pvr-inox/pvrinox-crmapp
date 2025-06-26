@@ -2,27 +2,32 @@ package com.cinema.crm.modules.refunds.service.impl;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import com.cinema.crm.constants.Constants;
-import com.cinema.crm.constants.InitiateRefundResponse;
 import com.cinema.crm.constants.Constants.Message;
 import com.cinema.crm.constants.Constants.RespCode;
 import com.cinema.crm.constants.Constants.Result;
 import com.cinema.crm.modules.entity.Configuration;
 import com.cinema.crm.modules.entity.ConfigurationRepository;
+import com.cinema.crm.constants.InitiateRefundResponse;
 import com.cinema.crm.modules.entity.Email;
+import com.cinema.crm.modules.entity.JuspayRedeemDetail;
 import com.cinema.crm.modules.entity.NotificationTemplate;
 import com.cinema.crm.modules.entity.RefundDetails;
 import com.cinema.crm.modules.entity.Transactions;
 import com.cinema.crm.modules.model.JuspayOrderStatus;
+import com.cinema.crm.modules.model.JuspayRefund;
 import com.cinema.crm.modules.model.SingleRefundReq;
-import com.cinema.crm.modules.model.WSReturnObj;
+import com.cinema.crm.modules.refunds.model.JuspayRefundResponse;
 import com.cinema.crm.modules.refunds.service.RefundService;
+import com.cinema.crm.modules.repository.JuspayRedeemDetailRepository;
 import com.cinema.crm.modules.repository.NotificationTemplateRepository;
 import com.cinema.crm.modules.repository.RefundDetailsRepository;
 import com.cinema.crm.modules.repository.TransactionsRepository;
@@ -46,19 +51,30 @@ public class RefundServiceImpl implements RefundService {
 	public RefundServiceImpl(TransactionsRepository transactionsRepository,
 			RefundDetailsRepository refundDetailsRepository,RefundUtility refundUtility,EmailUtil emailUtil,
 			NotificationTemplateRepository notificationTemplateRepository,ConfigurationRepository configurationRepository) {
+	private final JuspayRedeemDetailRepository juspayRedeemDetailRepository;
+	
+	public RefundServiceImpl(TransactionsRepository transactionsRepository,
+			RefundDetailsRepository refundDetailsRepository,RefundUtility refundUtility,EmailUtil emailUtil,
+			NotificationTemplateRepository notificationTemplateRepository,
+			JuspayRedeemDetailRepository juspayRedeemDetailRepository) {
+				
 		this.transactionsRepository = transactionsRepository;
 		this.refundDetailsRepository = refundDetailsRepository;
 		this.refundUtility = refundUtility;
 		this.emailUtil = emailUtil;
 		this.notificationTemplateRepository = notificationTemplateRepository;
+
 		this.configurationRepository = configurationRepository;
+
+		this.juspayRedeemDetailRepository = juspayRedeemDetailRepository;
+
 	}
 
 	@Override
 	public ResponseEntity<Object> initiateRefund(SingleRefundReq singleRefundReq) {
-		Optional<Transactions> opsTransactions = transactionsRepository.findById(singleRefundReq.getBookingId());
-		if (opsTransactions.isPresent()) {
-			Transactions transactions = opsTransactions.get();
+		Transactions transactions = this.getTransactions(singleRefundReq);
+		if (Objects.nonNull(transactions)) {
+			
 			if (Constants.REFUND_INITIATE.equals(transactions.getPaymentStatus())) {
 				return ResponseEntity.ok(InitiateRefundResponse.builder()
 						.bookingId(singleRefundReq.getBookingId())
@@ -71,8 +87,8 @@ public class RefundServiceImpl implements RefundService {
 			if (Constants.ROLLEDBACK.equals(transactions.getPaymentStatus())) {
 				return ResponseEntity.ok(InitiateRefundResponse.builder()
 						.bookingId(singleRefundReq.getBookingId())
-						.result(Result.SUCCESS)
-						.responseCode(RespCode.SUCCESS)
+						.result(Result.ERROR)
+						.responseCode(RespCode.FAILED)
 						.message(Message.ALREADY_PROCESSED)
 						.build());
 			}
@@ -107,7 +123,7 @@ public class RefundServiceImpl implements RefundService {
 
 				
 				Email email = new Email(aprovalEmail, template.getEmailSubject() + singleRefundReq.getBookingId(), template.getEmailFrom(),
-						"akshay.chandekar@aurusit.com", template.getEmailCc(), template.getEmailBcc(), new Date(), 5, template.getName(),
+						"", template.getEmailCc(), template.getEmailBcc(), new Date(), 5, template.getName(),
 						"", transactions.getChain(), false);
 				
 				emailUtil.send(email);
@@ -136,8 +152,12 @@ public class RefundServiceImpl implements RefundService {
 				.build());
 	}
 
-	private void juspay(String bookingId) {
-		JuspayOrderStatus orderStatus = refundUtility.juspayOrderStatus(bookingId);
+	private Transactions getTransactions(SingleRefundReq singleRefundReq) {
+		Optional<Transactions> opsTransactions = transactionsRepository.findById(singleRefundReq.getBookingId());
+		if (opsTransactions.isPresent()) {
+			return opsTransactions.get();
+		}
+		return Transactions.builder().build();
 		
 	}
 	
@@ -187,6 +207,123 @@ public class RefundServiceImpl implements RefundService {
 	}
 	
 	
+
+	@Override
+	public ResponseEntity<Object> aproval(SingleRefundReq singleRefundReq) {
+		Transactions transactions = this.getTransactions(singleRefundReq);
+		if (Objects.nonNull(transactions)) {
+			this.juspay(singleRefundReq.getBookingId());
+			
+			return ResponseEntity.ok(InitiateRefundResponse.builder()
+					.bookingId(singleRefundReq.getBookingId())
+					.result(Result.SUCCESS)
+					.responseCode(RespCode.SUCCESS)
+					.message(Message.REQUESTED_NODAL_OFFICER)
+					.build());
+		}
+		
+		return ResponseEntity.ok(InitiateRefundResponse.builder()
+				.bookingId(singleRefundReq.getBookingId())
+				.result(Result.ERROR)
+				.responseCode(RespCode.FAILED)
+				.message(Message.ALREADY_PROCESSED)
+				.build());
+	}
+
+	private void juspay(String bookingId) {
+		JuspayOrderStatus juspayOrderStatus = refundUtility.juspayOrderStatus(bookingId);
+		if(!ObjectUtils.isEmpty(juspayOrderStatus.getStatus()) && juspayOrderStatus.getStatus().equalsIgnoreCase("CHARGED")) {
+			
+		}
+	}
+	
+	public boolean jusPayRefund(String bookingid, String type, String amt, Transactions booking) {
+        boolean isrollback = true;
+        try {
+            final List<JuspayRedeemDetail> redeemDetailVOs = juspayRedeemDetailRepository.findAllByBookingid(bookingid);
+            if (redeemDetailVOs != null && !redeemDetailVOs.isEmpty()) {
+                for (JuspayRedeemDetail redeemDetailVO : redeemDetailVOs) {
+                    log.debug("REFUND PROCESSING FOR BOOKING ID :: {}, PAYMENT ID :: {}", bookingid, redeemDetailVO.getId());
+                    final JuspayOrderStatus orderStatusVO = refundUtility.juspayOrderStatus(redeemDetailVO.getBookingid());
+                    if (orderStatusVO != null && orderStatusVO.getStatus().equalsIgnoreCase("CHARGED")) {
+                        log.debug("JUSPAY ORDER STATUS RESULT FOR BOOKING ID :: {}", orderStatusVO.getStatus(), redeemDetailVO.getBookingid());
+                       
+                        if (orderStatusVO.getRefunds() != null && orderStatusVO.getRefunds().size() > 0) {
+                            JuspayRefund refundVO = orderStatusVO.getRefunds().get(0);
+                            if (refundVO != null && (refundVO.isSent_to_gateway() || orderStatusVO.getRefunded())) {
+                            	redeemDetailVO.setStatus(Constants.RGM_CANCEL);
+                                redeemDetailVO.setRefunded(orderStatusVO.getRefunded());
+                                redeemDetailVO.setRefundAmount(String.valueOf(refundVO.getAmount()));
+                                redeemDetailVO.setRefundDate(new Date());
+                                redeemDetailVO.setRefundId(refundVO.getRef());
+                                redeemDetailVO.setResponseMessage(refundVO.getStatus());
+                                juspayRedeemDetailRepository.save(redeemDetailVO);
+                                log.debug("amount has already been refunded successfully for booking id :: {}, payment id :: {}", bookingid, redeemDetailVO.getId());
+                            } else {
+                                log.debug("refunded amount for booking id :: {} :: {}", bookingid, amt);
+                                final JuspayRefundResponse refundResponseVO = refundUtility.juspayOrderRefund(orderStatusVO.getOrder_id(), amt);
+                                if (refundResponseVO != null) {
+                                    log.debug("juspay refund order status for booking id = {} :: refunded = {}", redeemDetailVO.getBookingid(), refundResponseVO.isRefunded());
+                                    JuspayRefund refundVO2 = refundResponseVO.getRefunds().get(0);
+                                    if (refundVO2 != null && (refundVO2.isSent_to_gateway() || refundResponseVO.isRefunded())) {
+                                    	redeemDetailVO.setStatus(Constants.RGM_CANCEL);
+                                        redeemDetailVO.setRefunded(refundResponseVO.isRefunded());
+                                        
+                                        redeemDetailVO.setRefundAmount(String.valueOf(refundVO2.getAmount()));
+                                        redeemDetailVO.setRefundDate(new Date());
+                                        redeemDetailVO.setRefundId(refundVO2.getRef());
+                                        redeemDetailVO.setResponseMessage(refundVO2.getStatus());
+                                        juspayRedeemDetailRepository.save(redeemDetailVO);
+                                        log.debug("amount has been refunded successfully for booking id :: {}, payment id :: {}", bookingid, redeemDetailVO.getId());
+                                    } else {
+                                        isrollback = false;
+                                    }
+                                } else {
+                                	log.debug("juspay refund result is null for booking id :: {}", redeemDetailVO.getBookingid());
+                                    isrollback = false;
+                                }
+                            }
+                        } else {
+                        	log.debug("refunded amount for booking id :: {} :: {}", bookingid, amt);
+                            final JuspayRefundResponse refundResponseVO = refundUtility.juspayOrderRefund(orderStatusVO.getOrder_id(), amt);
+                            if (refundResponseVO != null) {
+                            	log.debug("juspay refund order status for booking id = {} :: refunded = {}", redeemDetailVO.getBookingid(), refundResponseVO.isRefunded());
+                                JuspayRefund refundVO2 = refundResponseVO.getRefunds() != null ? refundResponseVO.getRefunds().get(0) : null;
+                                if (refundVO2 != null && (refundVO2.isSent_to_gateway() || refundResponseVO.isRefunded())) {
+                                	redeemDetailVO.setStatus(Constants.RGM_CANCEL);
+                                    redeemDetailVO.setRefunded(refundResponseVO.isRefunded());
+                                    redeemDetailVO.setRefundAmount(String.valueOf(refundVO2.getAmount()));
+                                    redeemDetailVO.setRefundDate(new Date());
+                                    redeemDetailVO.setRefundId(refundVO2.getRef());
+                                    redeemDetailVO.setResponseMessage(refundVO2.getStatus());
+                                    juspayRedeemDetailRepository.save(redeemDetailVO);
+                                    log.debug("amount has been refunded successfully for booking id :: {}, PAYMENT ID :: {}", bookingid, redeemDetailVO.getId());
+                                } else {
+                                    isrollback = false;
+                                }
+                            } else {
+                            	log.debug("juspay refund result is null for booking id :: {}", redeemDetailVO.getBookingid());
+                                isrollback = false;
+                            }
+                        }
+                    } else if (orderStatusVO != null && (orderStatusVO.getStatus().equalsIgnoreCase("AUTHORIZING") || orderStatusVO.getStatus().equalsIgnoreCase("PENDING_VBV"))) {
+                        booking.setPaymentStatus(orderStatusVO.getStatus());
+                        transactionsRepository.save(booking);
+                        isrollback = false;
+                    } else {
+                    	log.debug("juspay order status result for booking id :: {}", redeemDetailVO.getBookingid(), orderStatusVO.getStatus());
+                    }
+                    //}
+                }
+            } else {
+            	log.debug("no payment to refund for this booking :: {}", bookingid);
+            }
+        } catch (final Exception e) {
+        	log.error("exception occured in juspay rollback for booking id :: {} :: {}", bookingid, e.getMessage());
+            isrollback = false;
+        }
+        return isrollback;
+    }
 
 
 }

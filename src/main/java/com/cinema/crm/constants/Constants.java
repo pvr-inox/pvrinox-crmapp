@@ -8,6 +8,7 @@ public class Constants {
 	public static final String REFUND_INITIATE = "refund initiated";
 	public static final String REFUND_COMPLETED = "refund completed";
 	public static final String ROLLEDBACK = "ROLLEDBACK";
+	public static final String RGM_CANCEL = "RGM_CANCEL";
 
 	public static class RespCode {
 		public static final String SUCCESS = "00";

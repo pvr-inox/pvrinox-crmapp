@@ -33,7 +33,7 @@ public class RefundController {
 	}
 
 	@PostMapping("approve-refund")
-	public ResponseEntity<Object> signleRefund(@RequestBody SingleRefundReq singleRefundReq, HttpServletRequest servletRequest){
-		return refundService.initiateRefund(singleRefundReq);
+	public ResponseEntity<Object> aproval(@RequestBody SingleRefundReq singleRefundReq, HttpServletRequest servletRequest){
+		return refundService.aproval(singleRefundReq);
 	}
 }

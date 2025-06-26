@@ -4,7 +4,9 @@ package com.cinema.crm.modules.utils;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.cinema.crm.modules.entity.Configuration;
 import com.cinema.crm.modules.entity.ConfigurationRepository;
 import com.cinema.crm.modules.model.JuspayOrderStatus;
+import com.cinema.crm.modules.refunds.model.JuspayRefundResponse;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -56,7 +59,7 @@ public class RefundUtility {
 		this.configurationRepository = configurationRepository;
 	}
 
-	private Map<String, String> getJuspayHeaders() {
+	private Map<String, String> juspayGetHeaders() {
         Map<String, String> headers = new HashMap<String, String>();
         headers.put("Accept", "application/json");
         headers.put("Authorization", "Basic " + JUSPAY_API_KEY);
@@ -64,11 +67,23 @@ public class RefundUtility {
         headers.put("version", "2021-10-25");
         return headers;
     }
+	
+    private Map<String, String> juspayPostHeaders() {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("User-Agent", "Mozilla/5.0");
+        headers.put("Accept", "application/json");
+        headers.put("Authorization", "Basic " + JUSPAY_API_KEY);
+        headers.put("Content-Type", "application/json");
+        headers.put("x-merchantid", JUSPAY_MID);
+        headers.put("version", "2021-10-25");
+
+        return headers;
+    }
     
     public JuspayOrderStatus juspayOrderStatus(String bookingid) {
         JuspayOrderStatus orderStatusVO = null;
         try {
-        	 String response = httpUtil.invoke(JUSPAY_API_URL + "orders/" + bookingid, getJuspayHeaders(), String.valueOf(bookingid), JUSPAY_TIMEOUT);
+        	 String response = httpUtil.invoke(JUSPAY_API_URL + "orders/" + bookingid, juspayGetHeaders(), String.valueOf(bookingid), JUSPAY_TIMEOUT);
             log.debug("JUSPAY ORDER STATUS RESPONSE FOR BOOKING ID :: {} :: {}", bookingid, response);
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -154,5 +169,26 @@ public class RefundUtility {
 		return null;
 	}
 
+    public JuspayRefundResponse juspayOrderRefund(String bookingid, String amount) {
+        Map<String, String> request = new LinkedHashMap<String, String>();
+        Random random = new Random();
+        // Generate a random number between 10 and 99 (inclusive)
+        int randomNumber = random.nextInt(90) + 10;
+        request.put("unique_request_id", "REF-" + randomNumber + "-" + bookingid);
+        request.put("amount", amount);
+        JuspayRefundResponse refundResponseVO = null;
+        try {
+            String response = httpUtil.invokePost(JUSPAY_API_URL + "orders/" + bookingid + "/refunds", juspayPostHeaders(), (new Gson()).toJson(request), "application/json", bookingid, JUSPAY_TIMEOUT);
+            log.debug("JUSPAY ORDER REFUND RESPONSE FOR BOOKING ID :: {} :: {}", bookingid, response);
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            refundResponseVO = mapper.readValue(response, JuspayRefundResponse.class);
+            log.debug("JUSPAY ORDER REFUND RESPONSE AFTER MAPPING FOR BOOKING ID :: {} :: {}", bookingid, new Gson().toJson(refundResponseVO));
+            return refundResponseVO;
+        } catch (Exception e) {
+        	log.error("EXCEPTION OCCURED IN JUSPAY ORDER RESFUND FOR BOOKING ID :: {} :: {}", bookingid, e.getMessage());
+        }
+        return refundResponseVO;
+    }
 
 }
