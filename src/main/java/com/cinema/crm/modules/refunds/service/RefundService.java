@@ -8,7 +8,5 @@ public interface RefundService {
 
 	ResponseEntity<Object> initiateRefund(SingleRefundReq singleRefundReq);
 
-	ResponseEntity<Object> generateGiftCardToken();
-
 	ResponseEntity<Object> aproval(SingleRefundReq singleRefundReq);
 }

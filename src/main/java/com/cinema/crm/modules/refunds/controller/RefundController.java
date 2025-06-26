@@ -1,7 +1,6 @@
 package com.cinema.crm.modules.refunds.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,11 +26,6 @@ public class RefundController {
 		return refundService.initiateRefund(singleRefundReq);
 	}
 	
-	@GetMapping("testGiftCard")
-	public ResponseEntity<Object> testGiftCard(){
-		return refundService.generateGiftCardToken();
-	}
-
 	@PostMapping("approve-refund")
 	public ResponseEntity<Object> aproval(@RequestBody SingleRefundReq singleRefundReq, HttpServletRequest servletRequest){
 		return refundService.aproval(singleRefundReq);

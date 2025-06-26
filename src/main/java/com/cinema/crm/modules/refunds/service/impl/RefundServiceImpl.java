@@ -14,6 +14,7 @@ import com.cinema.crm.constants.Constants;
 import com.cinema.crm.constants.Constants.Message;
 import com.cinema.crm.constants.Constants.RespCode;
 import com.cinema.crm.constants.Constants.Result;
+import com.cinema.crm.modules.database.main.GiftcardRedeemDetail;
 import com.cinema.crm.modules.entity.Configuration;
 import com.cinema.crm.modules.entity.ConfigurationRepository;
 import com.cinema.crm.constants.InitiateRefundResponse;
@@ -28,6 +29,7 @@ import com.cinema.crm.modules.model.SingleRefundReq;
 import com.cinema.crm.modules.refunds.model.JuspayRefundResponse;
 import com.cinema.crm.modules.refunds.service.RefundService;
 import com.cinema.crm.modules.repository.JuspayRedeemDetailRepository;
+import com.cinema.crm.modules.repository.GiftcardRedeemDetailRepository;
 import com.cinema.crm.modules.repository.NotificationTemplateRepository;
 import com.cinema.crm.modules.repository.RefundDetailsRepository;
 import com.cinema.crm.modules.repository.TransactionsRepository;
@@ -47,26 +49,21 @@ public class RefundServiceImpl implements RefundService {
 	private final EmailUtil emailUtil;
 	private final NotificationTemplateRepository notificationTemplateRepository;
 	private final ConfigurationRepository configurationRepository;
-	
-	public RefundServiceImpl(TransactionsRepository transactionsRepository,
-			RefundDetailsRepository refundDetailsRepository,RefundUtility refundUtility,EmailUtil emailUtil,
-			NotificationTemplateRepository notificationTemplateRepository,ConfigurationRepository configurationRepository) {
+	private final GiftcardRedeemDetailRepository giftcardRedeemDetailRepository;
 	private final JuspayRedeemDetailRepository juspayRedeemDetailRepository;
 	
 	public RefundServiceImpl(TransactionsRepository transactionsRepository,
 			RefundDetailsRepository refundDetailsRepository,RefundUtility refundUtility,EmailUtil emailUtil,
 			NotificationTemplateRepository notificationTemplateRepository,
-			JuspayRedeemDetailRepository juspayRedeemDetailRepository) {
-				
+			JuspayRedeemDetailRepository juspayRedeemDetailRepository,ConfigurationRepository configurationRepository,GiftcardRedeemDetailRepository giftcardRedeemDetailRepository) {
 		this.transactionsRepository = transactionsRepository;
 		this.refundDetailsRepository = refundDetailsRepository;
 		this.refundUtility = refundUtility;
 		this.emailUtil = emailUtil;
 		this.notificationTemplateRepository = notificationTemplateRepository;
-
 		this.configurationRepository = configurationRepository;
-
 		this.juspayRedeemDetailRepository = juspayRedeemDetailRepository;
+		this.giftcardRedeemDetailRepository = giftcardRedeemDetailRepository;
 
 	}
 
@@ -161,16 +158,18 @@ public class RefundServiceImpl implements RefundService {
 		
 	}
 	
-	private Object cancelGiftCard(String transactionId, String cardNumber, String originalAmount,
-			String invoiceNumber, String originalTransactionId, String originalBatchNumber, String originalApprovalCode,
-			String idempotencyKey) {
+	private Object cancelGiftCard(String bookingId) {
 		try {
-			Map<String, Object> cancelResponse = refundUtility.cancelGiftCard(transactionId, cardNumber, originalAmount,
-					invoiceNumber, originalTransactionId, originalBatchNumber, originalApprovalCode, idempotencyKey);
+			GiftcardRedeemDetail giftcardRedeemDetail = giftcardRedeemDetailRepository.findByBookingId(bookingId);
+			if(Objects.isNull(giftcardRedeemDetail)) {
+				log.error("Booking not found for booking id: {}", bookingId);
+				return null;
+			}
+			generateGiftCardToken(); //generate new token for gift card
+			Map<String, Object> cancelResponse = refundUtility.cancelGiftCard(giftcardRedeemDetail);
 			if (Objects.nonNull(cancelResponse) && 0 == (int) cancelResponse.get("ResponseCode")
 					&& "Transaction successful.".equalsIgnoreCase((String) cancelResponse.get("ResponseMessage"))) {
 				log.info("cancel gift card success response: " ,new Gson().toJson(cancelResponse));
-				
 			}else{
 				log.info("cancel gift card failed response: " ,new Gson().toJson(cancelResponse));
 			}
@@ -183,8 +182,7 @@ public class RefundServiceImpl implements RefundService {
 		return null;
 	}
 	
-	@Override
-	public ResponseEntity<Object> generateGiftCardToken() {
+	public void generateGiftCardToken() {
 		String authToken = "";
 		try {
 			Map<String, Object> tokenResponse = refundUtility.generateGiftCardToken();
@@ -192,18 +190,20 @@ public class RefundServiceImpl implements RefundService {
 			if(Objects.nonNull(tokenResponse) && 0 == (int) tokenResponse.get("responseCode") && "Transaction successful.".equalsIgnoreCase((String) tokenResponse.get("responseMessage"))){
 				authToken = (String) tokenResponse.get("authToken");
 				Configuration value = configurationRepository.findByName("GIFT_CARD_TOKEN");
-				if(Objects.nonNull(value)) value.setValue(authToken);
-				configurationRepository.save(value);
-				
-				cancelGiftCard("6950748", "6699960102004658", "1", "200250006950748679", "6950748", "14652027", "116272471", "1750856331874");
+				if(Objects.nonNull(value)) {
+					value.setValue(authToken);
+					configurationRepository.save(value);
+				}
+				//cancelGiftCard("200250006950751");
 			}else {
 				ResponseEntity.ok(null);
+				log.info("failed to generate token, response: " ,new Gson().toJson(tokenResponse));
 			}
-			return ResponseEntity.ok(tokenResponse);
+			//return ResponseEntity.ok(tokenResponse);
 		} catch (Exception e) {
 			log.error("GIFT CARD ERROR: ", e);
 		}
-		return ResponseEntity.ok(null);
+		//return ResponseEntity.ok(null);
 	}
 	
 	

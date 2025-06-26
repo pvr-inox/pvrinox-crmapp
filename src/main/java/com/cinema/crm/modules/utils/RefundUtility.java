@@ -11,6 +11,7 @@ import java.util.Random;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.cinema.crm.modules.database.main.GiftcardRedeemDetail;
 import com.cinema.crm.modules.entity.Configuration;
 import com.cinema.crm.modules.entity.ConfigurationRepository;
 import com.cinema.crm.modules.model.JuspayOrderStatus;
@@ -127,23 +128,21 @@ public class RefundUtility {
         return null;
     }
     
-	public Map<String, Object> cancelGiftCard(String transactionId, String cardNumber, String originalAmount,
-			String invoiceNumber, String originalTransactionId, String originalBatchNumber, String originalApprovalCode,
-			String idempotencyKey) {
+	public Map<String, Object> cancelGiftCard(GiftcardRedeemDetail giftcardRedeemDetail) {
 		try {
 			Map<String, Object> payload = new HashMap<>();
-			payload.put("TransactionId", transactionId);
-			payload.put("CardNumber", cardNumber);
-			payload.put("OriginalAmount", originalAmount);
-			payload.put("InvoiceNumber", invoiceNumber);
-			payload.put("OriginalTransactionId", originalTransactionId);
-			payload.put("OriginalBatchNumber", originalBatchNumber);
-			payload.put("OriginalApprovalCode", originalApprovalCode);
+			payload.put("TransactionId", giftcardRedeemDetail.getTransactionId());
+			payload.put("CardNumber", giftcardRedeemDetail.getCardNumber());
+			payload.put("OriginalAmount", giftcardRedeemDetail.getAmount() / 100);
+			payload.put("InvoiceNumber", giftcardRedeemDetail.getInvoiceNumber());
+			payload.put("OriginalTransactionId", giftcardRedeemDetail.getTransactionId());
+			payload.put("OriginalBatchNumber", giftcardRedeemDetail.getBatchNumber());
+			payload.put("OriginalApprovalCode", giftcardRedeemDetail.getApprovalCode());
 			payload.put("Notes", "cancel txn");
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	        LocalDateTime now = LocalDateTime.now();
 			payload.put("DateAtClient", now.format(formatter));
-			payload.put("Idempotencykey", idempotencyKey);
+			payload.put("Idempotencykey", giftcardRedeemDetail.getTransactionId());
 			
 			Configuration value = configurationRepository.findByName("GIFT_CARD_TOKEN");
 			
