@@ -11,7 +11,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class SingleRefundReq {
+public class SingleRefundRequest {
 	
 	public String bookingId;
     public String eventName;

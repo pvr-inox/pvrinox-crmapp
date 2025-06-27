@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cinema.crm.modules.model.SingleRefundReq;
+import com.cinema.crm.modules.model.SingleRefundRequest;
 import com.cinema.crm.modules.refunds.service.RefundService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,12 +22,12 @@ public class RefundController {
 	}
 
 	@PostMapping("initiate-refund")
-	public ResponseEntity<Object> initiateRefund(@RequestBody SingleRefundReq singleRefundReq, HttpServletRequest servletRequest){
+	public ResponseEntity<Object> initiateRefund(@RequestBody SingleRefundRequest singleRefundReq, HttpServletRequest servletRequest){
 		return refundService.initiateRefund(singleRefundReq);
 	}
 	
 	@PostMapping("approve-refund")
-	public ResponseEntity<Object> aproval(@RequestBody SingleRefundReq singleRefundReq, HttpServletRequest servletRequest){
+	public ResponseEntity<Object> aproval(@RequestBody SingleRefundRequest singleRefundReq, HttpServletRequest servletRequest){
 		return refundService.aproval(singleRefundReq);
 	}
 }

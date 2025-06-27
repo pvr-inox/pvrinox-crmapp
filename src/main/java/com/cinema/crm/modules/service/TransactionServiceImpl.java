@@ -20,7 +20,7 @@ import com.cinema.crm.modules.entity.OrderBooking;
 import com.cinema.crm.modules.entity.OrderBookingRepository;
 import com.cinema.crm.modules.entity.RefundDetails;
 import com.cinema.crm.modules.entity.Transactions;
-import com.cinema.crm.modules.model.SingleRefundReq;
+import com.cinema.crm.modules.model.SingleRefundRequest;
 import com.cinema.crm.modules.model.TransactionReq;
 import com.cinema.crm.modules.model.TransactionResp;
 import com.cinema.crm.modules.model.WSReturnObj;

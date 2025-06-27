@@ -8,9 +8,10 @@ public class Constants {
 	public static final String REFUND_INITIATE = "REFUND_INITIATED";
 	public static final String REFUND_COMPLETED = "REFUND_COMPLETED";
 	public static final String ROLLEDBACK = "ROLLEDBACK";
-	public static final String RGM_CANCEL = "RGM_CANCEL";
-	public static final String CRM_CANCEL = "CRM_CANCEL";
+	public static final String RGM_CANCEL = "NODAL_OFFICER_CANCEL";
+	public static final String CANCEL_COMPLETE = "CANCEL_COMPLETE";
 	public static final String CRM_ROLLEDBACK = "CRM_ROLLEDBACK";
+	public static final String CANCEL = "CANCEL";
 
 	public static class RespCode {
 		public static final String SUCCESS = "00";

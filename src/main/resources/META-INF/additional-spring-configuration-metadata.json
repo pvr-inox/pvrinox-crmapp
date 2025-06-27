@@ -1,0 +1,192 @@
+{"properties": [
+  {
+    "name": "mail.ternary.username",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.ternary.username'"
+  },
+  {
+    "name": "mail.primary.username",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.primary.username'"
+  },
+  {
+    "name": "mail.max_retries",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.max_retries'"
+  },
+  {
+    "name": "mail.primary.password",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.primary.password'"
+  },
+  {
+    "name": "mail.primary.host",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.primary.host'"
+  },
+  {
+    "name": "mail.primary.port",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.primary.port'"
+  },
+  {
+    "name": "mail.secondary.username",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.secondary.username'"
+  },
+  {
+    "name": "mail.secondary.password",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.secondary.password'"
+  },
+  {
+    "name": "mail.secondary.host",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.secondary.host'"
+  },
+  {
+    "name": "mail.secondary.port",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.secondary.port'"
+  },
+  {
+    "name": "mail.ternary.password",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.ternary.password'"
+  },
+  {
+    "name": "mail.properties.mail.smtp.socketFactory",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.properties.mail.smtp.socketFactory'"
+  },
+  {
+    "name": "mail.quarterly.username",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.quarterly.username'"
+  },
+  {
+    "name": "mail.ternary.host",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.ternary.host'"
+  },
+  {
+    "name": "mail.ternary.port",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.ternary.port'"
+  },
+  {
+    "name": "mail.quarterly.password",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.quarterly.password'"
+  },
+  {
+    "name": "mail.quarterly.host",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.quarterly.host'"
+  },
+  {
+    "name": "mail.quarterly.port",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.quarterly.port'"
+  },
+  {
+    "name": "mail.properties.mail.smtp.auth",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.properties.mail.smtp.auth'"
+  },
+  {
+    "name": "mail.properties.mail.smtp.port",
+    "type": "java.lang.String",
+    "description": "A description for 'mail.properties.mail.smtp.port'"
+  },
+  {
+    "name": "refund.juspay-client_id",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.juspay-client_id'"
+  },
+  {
+    "name": "refund.juspay-username",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.juspay-username'"
+  },
+  {
+    "name": "refund.juspay-env",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.juspay-env'"
+  },
+  {
+    "name": "refund.juspay-key",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.juspay-key'"
+  },
+  {
+    "name": "refund.juspay-mid",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.juspay-mid'"
+  },
+  {
+    "name": "refund.juspay-password",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.juspay-password'"
+  },
+  {
+    "name": "refund.juspay-url",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.juspay-url'"
+  },
+  {
+    "name": "refund.timeout",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.timeout'"
+  },
+  {
+    "name": "refund.giftcard-url",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.giftcard-url'"
+  },
+  {
+    "name": "refund.giftcard-transactionid",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.giftcard-transactionid'"
+  },
+  {
+    "name": "refund.giftcard-terminalid",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.giftcard-terminalid'"
+  },
+  {
+    "name": "refund.giftcard-username",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.giftcard-username'"
+  },
+  {
+    "name": "refund.giftcard-password",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.giftcard-password'"
+  },
+  {
+    "name": "refund.giftcard-notes",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.giftcard-notes'"
+  },
+  {
+    "name": "refund.gyftr-userid",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.gyftr-userid'"
+  },
+  {
+    "name": "refund.gyftr-password",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.gyftr-password'"
+  },
+  {
+    "name": "refund.gyftr-url",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.gyftr-url'"
+  },
+  {
+    "name": "refund.gyftr-shopcode",
+    "type": "java.lang.String",
+    "description": "A description for 'refund.gyftr-shopcode'"
+  }
+]}

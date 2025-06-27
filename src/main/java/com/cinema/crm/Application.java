@@ -2,6 +2,7 @@ package com.cinema.crm;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -11,6 +12,7 @@ import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @SpringBootApplication
+@EnableConfigurationProperties
 public class Application extends SpringBootServletInitializer{
 
 	public static void main(String[] args) {
