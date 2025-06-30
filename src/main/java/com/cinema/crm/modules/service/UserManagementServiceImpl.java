@@ -9,12 +9,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.cinema.crm.modules.entity.Modules;
-import com.cinema.crm.modules.entity.ModulesRepository;
-import com.cinema.crm.modules.entity.RoleRepository;
-import com.cinema.crm.modules.entity.Roles;
-import com.cinema.crm.modules.entity.UserRepository;
-import com.cinema.crm.modules.entity.Users;
+import com.cinema.crm.databases.pvrinoxcrm.entities.Modules;
+import com.cinema.crm.databases.pvrinoxcrm.entities.Roles;
+import com.cinema.crm.databases.pvrinoxcrm.entities.Users;
+import com.cinema.crm.databases.pvrinoxcrm.repositories.ModulesRepository;
+import com.cinema.crm.databases.pvrinoxcrm.repositories.RoleRepository;
+import com.cinema.crm.databases.pvrinoxcrm.repositories.UserRepository;
 import com.cinema.crm.modules.model.ReqModule;
 import com.cinema.crm.modules.model.ReqRole;
 import com.cinema.crm.modules.model.ReqUser;

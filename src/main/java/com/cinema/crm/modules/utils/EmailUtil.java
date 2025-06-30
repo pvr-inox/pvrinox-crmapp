@@ -16,8 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import com.cinema.crm.constants.Constants.Result;
-import com.cinema.crm.modules.entity.Email;
-import com.cinema.crm.modules.repository.EmailRepository;
+import com.cinema.crm.databases.pvrinox.entities.Email;
+import com.cinema.crm.databases.pvrinox.repositories.EmailRepository;
 
 import java.io.File;
 import java.util.Date;

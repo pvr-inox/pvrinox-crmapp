@@ -13,9 +13,9 @@ import java.util.Random;
 import org.springframework.stereotype.Component;
 
 import com.cinema.crm.config.RefundPropertiesConfiguration;
-import com.cinema.crm.modules.database.main.GiftcardRedeemDetail;
-import com.cinema.crm.modules.entity.Configuration;
-import com.cinema.crm.modules.entity.ConfigurationRepository;
+import com.cinema.crm.databases.pvrinox.entities.Configuration;
+import com.cinema.crm.databases.pvrinox.entities.GiftcardRedeemDetail;
+import com.cinema.crm.databases.pvrinox.repositories.ConfigurationRepository;
 import com.cinema.crm.modules.model.JuspayOrderStatus;
 import com.cinema.crm.modules.refunds.model.GyftrCancelationResponse;
 import com.cinema.crm.modules.refunds.model.JuspayRefundResponse;
