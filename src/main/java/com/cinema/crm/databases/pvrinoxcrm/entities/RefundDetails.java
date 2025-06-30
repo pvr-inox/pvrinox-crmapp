@@ -26,17 +26,16 @@ public class RefundDetails {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	public String bookingId;
-    public String eventName;
-    public String customerName;
-    public String refundType;
-    @Column(name = "refund_status")
-    public String refundStatus;
-    public String refundReasons;
-    public String totalAmount;
-    public String refundAmount;
-    public String refund;
-    public String paymentGateway;
-    public String remarks;
+	@Column(name = "booking_id") private String bookingId;
+	@Column(name = "event_name") private String eventName;
+	@Column(name = "customer_name") private String customerName;
+	@Column(name = "refund_type") private String refundType;
+    @Column(name = "refund_status") private String refundStatus;
+    @Column(name = "refund_reasons") private String refundReasons;
+    @Column(name = "total_amount") private String totalAmount;
+    @Column(name = "refund_amount") private String refundAmount;
+    @Column(name = "refund") private String refund;
+    @Column(name = "payment_gateway") private String paymentGateway;
+    @Column(name = "remarks") private String remarks;
 
 }

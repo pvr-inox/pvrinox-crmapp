@@ -24,52 +24,52 @@ import lombok.ToString;
 public class JuspayRedeemDetail {
 
 	@Id private String id = "";
-	@Column(length = 30) private String bookingid = "";
+	@Column(name="bookingid", length = 30) private String bookingid = "";
 	@Column(length = 50) private String mid = "";
 	@Column(length = 20) private String booktype = "";
 
-	private long userId;
+	@Column(name = "user_Id") private long userId;
 	@Column(length = 20) private String mobile;
 	@Column(length = 50) private String email;
 	@Column(length = 15) private String platform;
 
 	@Column(length = 10) private String amount = "";
 	@Column(length = 20) private String status = "";
-	@Temporal(TemporalType.TIMESTAMP) private Date redeemDate;
+	@Temporal(TemporalType.TIMESTAMP) @Column(name="redeem_date") private Date redeemDate;
 
-	@Column(length = 100) private String transactionId;
-	@Column(length = 30) private String transactionStatus = "";
-	@Column(length = 5) private String responseCode = "";
+	@Column(name = "transaction_id", length = 100) private String transactionId;
+	@Column(name = "transaction_status", length = 30) private String transactionStatus = "";
+	@Column(name = "response_code", length = 5) private String responseCode = "";
 	@Column(length = 50) private String rrn = "";
-	@Column(length = 30) private String authId = "";
-	@Column(columnDefinition = "TEXT") private String responseMessage = "";
+	@Column(name = "auth_Id" , length = 30) private String authId = "";
+	@Column(name = "response_message", columnDefinition = "TEXT") private String responseMessage = "";
 
-	@Column(length = 50) private String paymentMethod = "";
-	@Column(length = 50) private String paymentMethodType = "";
+	@Column(name = "payment_method", length = 50) private String paymentMethod = "";
+	@Column(name = "payment_method_type", length = 50) private String paymentMethodType = "";
 
-	@Column(length = 100) private String tnxUuid = "";
+	@Column(name = "tnx_uuid", length = 100) private String tnxUuid = "";
 	@Column(length = 500) private String gateway = "";
-	@Column(length = 100) private String epgTxnId = "";
+	@Column(name = "epg_txn_id", length = 100) private String epgTxnId = "";
 
-	@Column(length = 20) private String cardType = ""; 	
-	@Column(length = 100) private String cardHolderName = "";
-	@Column(length = 50) private String cardIssuer = "";
-	@Column(length = 20) private String cardBrand = "";
+	@Column(name = "card_type", length = 20) private String cardType = ""; 	
+	@Column(name = "card_holder_name",  length = 100) private String cardHolderName = "";
+	@Column(name = "card_issuer",  length = 50) private String cardIssuer = "";
+	@Column(name = "card_brand", length = 20) private String cardBrand = "";
 
 	private boolean refunded = false;
-	private String refundAmount = "0";
-	@Column(length = 100) private String refundId = "";
-	private Date refundDate;
+	@Column(name = "refund_amount") private String refundAmount = "0";
+	@Column(name = "refund_id", length = 100) private String refundId = "";
+	@Column(name = "refund_date") private Date refundDate;
 	
-	@Column(length = 30) private String errorCode = "";
-	@Column(columnDefinition = "TEXT") private String errorMessage = "";
+	@Column(name = "error_code", length = 30) private String errorCode = "";
+	@Column(name = "error_message", columnDefinition = "TEXT") private String errorMessage = "";
 	
-	@Column(columnDefinition = "varchar(200) default ''") private String mandateId = "";
-	@Column(columnDefinition = "varchar(200) default ''") private String mandateStatus = "";
+	@Column(name = "mandate_id", columnDefinition = "varchar(200) default ''") private String mandateId = "";
+	@Column(name = "mandate_status", columnDefinition = "varchar(200) default ''") private String mandateStatus = "";
 	
-	@Column(columnDefinition = "varchar(255) default ''") private String payerAppName = "";
-	@Column(columnDefinition = "varchar(10) default ''") private String cardBin = "";
-	@Column(columnDefinition = "varchar(10) default ''") private String lastFourDigits = "";
+	@Column(name = "payer_app_name", columnDefinition = "varchar(255) default ''") private String payerAppName = "";
+	@Column(name = "card_bin", columnDefinition = "varchar(10) default ''") private String cardBin = "";
+	@Column(name = "last_four_digits", columnDefinition = "varchar(10) default ''") private String lastFourDigits = "";
 	
 	public JuspayRedeemDetail(String id, String bookingid, String booktype, long userId, String mobile,
 			String email, String platform, String amount, String status, Date redeemDate) {
