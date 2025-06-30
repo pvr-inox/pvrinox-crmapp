@@ -1,4 +1,4 @@
-package com.cinema.crm.databases.pvrinoxcrm.entities;
+package com.cinema.crm.databases.pvrinox.entities;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -122,7 +122,8 @@ public class Transactions {
     private String gstInvoiceNo;
     private Long refundedAmount;
     private String myTicket;
-    private Boolean additionalLangClip;
+    @Column(columnDefinition = "TINYINT default 0")
+    private boolean additionalLangClip;
     private String gstInvoiceNocan;
     private String gstInvoiceNocn;
     private Long ticketTax;

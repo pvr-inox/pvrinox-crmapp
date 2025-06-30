@@ -1,9 +1,10 @@
-package com.cinema.crm.config;
+package com.cinema.crm.databases;
 
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
@@ -19,34 +20,37 @@ import jakarta.persistence.EntityManagerFactory;
 
 @Configuration
 @EnableTransactionManagement
+@EnableConfigurationProperties
 @EnableJpaRepositories(
     basePackages = "com.cinema.crm.databases.pvrinox.repositories",
-    entityManagerFactoryRef = "pvrinoxEntityManagerFactory",
-    transactionManagerRef = "pvrinoxTransactionManager"
+    entityManagerFactoryRef = "inoxEntityManagerFactory",
+    transactionManagerRef = "inoxTransactionManager"
 )
-public class PvrinoxDatabaseConfig {
+public class InoxDataSourceConfiguration {
 
     @Primary
-    @Bean
-    @ConfigurationProperties("spring.datasource.pvrinox")
-    public DataSource pvrinoxDataSource() {
+    @Bean(name = "inoxDataSource")
+    @ConfigurationProperties(prefix = "spring.datasource.inox")
+    public DataSource inoxDataSource() {
         return DataSourceBuilder.create().build();
     }
 
     @Primary
-    @Bean
-    public LocalContainerEntityManagerFactoryBean pvrinoxEntityManagerFactory(EntityManagerFactoryBuilder builder) {
+    @Bean(name = "inoxEntityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean inoxEntityManagerFactory(
+            EntityManagerFactoryBuilder builder,
+            @Qualifier("inoxDataSource") DataSource dataSource) {
         return builder
-            .dataSource(pvrinoxDataSource())
-            .packages("com.cinema.crm.databases.pvrinox.entities")
-            .persistenceUnit("pvrinox")
-            .build();
+                .dataSource(dataSource)
+                .packages("com.cinema.crm.databases.pvrinox.entities")
+                .persistenceUnit("inox")
+                .build();
     }
 
     @Primary
-    @Bean
-    public PlatformTransactionManager pvrinoxTransactionManager(
-            @Qualifier("pvrinoxEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
-        return new JpaTransactionManager(entityManagerFactory);
+    @Bean(name = "inoxTransactionManager")
+    public PlatformTransactionManager inoxTransactionManager(
+            @Qualifier("inoxEntityManagerFactory") EntityManagerFactory emf) {
+        return new JpaTransactionManager(emf);
     }
 }

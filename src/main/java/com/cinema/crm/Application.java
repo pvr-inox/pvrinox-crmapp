@@ -13,7 +13,7 @@ import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @EnableConfigurationProperties
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@SpringBootApplication()
 public class Application extends SpringBootServletInitializer{
 
 	public static void main(String[] args) {
