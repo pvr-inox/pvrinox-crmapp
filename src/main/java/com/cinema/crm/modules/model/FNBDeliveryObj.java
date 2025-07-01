@@ -3,7 +3,7 @@ package com.cinema.crm.modules.model;
 import java.util.List;
 import java.util.Map;
 
-import com.cinema.crm.modules.entity.Food;
+import com.cinema.crm.databases.pvrinox.entities.Food;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
