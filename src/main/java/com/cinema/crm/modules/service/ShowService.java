@@ -1,9 +1,10 @@
-//package com.cinema.crm.modules.service;
-//
-//
-//import com.cinema.crm.modules.model.Show;
-//import org.springframework.http.ResponseEntity;
-//
-//public interface ShowService {
-//    ResponseEntity<Object> saveShow(Show show);
-//}
+package com.cinema.crm.modules.service;
+
+
+import org.springframework.http.ResponseEntity;
+
+import com.cinema.crm.databases.pvrinoxcrm.entities.Show;
+
+public interface ShowService {
+    ResponseEntity<Object> saveShow(Show show);
+}
