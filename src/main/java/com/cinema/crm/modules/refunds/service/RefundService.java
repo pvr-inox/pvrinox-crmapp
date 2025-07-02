@@ -9,4 +9,6 @@ public interface RefundService {
 	ResponseEntity<Object> initiateRefund(SingleRefundRequest singleRefundReq);
 
 	ResponseEntity<Object> aproval(SingleRefundRequest singleRefundReq);
+	
+	//ResponseEntity<Object> cancelTrans(String id);
 }

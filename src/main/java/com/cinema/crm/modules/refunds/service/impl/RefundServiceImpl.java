@@ -1,34 +1,50 @@
 package com.cinema.crm.modules.refunds.service.impl;
 
+import java.lang.reflect.Array;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.cinema.crm.constants.Constants;
+import com.cinema.crm.constants.Constants.Foodtype;
 import com.cinema.crm.constants.Constants.Message;
 import com.cinema.crm.constants.Constants.RespCode;
 import com.cinema.crm.constants.Constants.Result;
+import com.cinema.crm.constants.Constants.ShowBizTransType;
+import com.cinema.crm.constants.Constants.TransType;
 import com.cinema.crm.constants.InitiateRefundResponse;
+import com.cinema.crm.databases.pvrinox.entities.Cinema;
 import com.cinema.crm.databases.pvrinox.entities.Configuration;
 import com.cinema.crm.databases.pvrinox.entities.Email;
 import com.cinema.crm.databases.pvrinox.entities.GiftcardRedeemDetail;
 import com.cinema.crm.databases.pvrinox.entities.GyftrRedeemDetail;
 import com.cinema.crm.databases.pvrinox.entities.JuspayRedeemDetail;
+import com.cinema.crm.databases.pvrinox.entities.OrderBooking;
+import com.cinema.crm.databases.pvrinox.entities.Pos;
 import com.cinema.crm.databases.pvrinox.entities.Transactions;
+import com.cinema.crm.databases.pvrinox.repositories.CinemaRepository;
 import com.cinema.crm.databases.pvrinox.repositories.ConfigurationRepository;
 import com.cinema.crm.databases.pvrinox.repositories.GiftcardRedeemDetailRepository;
 import com.cinema.crm.databases.pvrinox.repositories.GyftrRedeemDetailRepository;
 import com.cinema.crm.databases.pvrinox.repositories.JuspayRedeemDetailRepository;
+import com.cinema.crm.databases.pvrinox.repositories.OrderBookingRepository;
+import com.cinema.crm.databases.pvrinox.repositories.PosRepository;
 import com.cinema.crm.databases.pvrinox.repositories.TransactionsRepository;
 import com.cinema.crm.databases.pvrinoxcrm.entities.NotificationTemplate;
 import com.cinema.crm.databases.pvrinoxcrm.entities.RefundDetails;
@@ -36,12 +52,16 @@ import com.cinema.crm.databases.pvrinoxcrm.repositories.NotificationTemplateRepo
 import com.cinema.crm.databases.pvrinoxcrm.repositories.RefundDetailsRepository;
 import com.cinema.crm.modules.model.JuspayOrderStatus;
 import com.cinema.crm.modules.model.JuspayRefund;
+import com.cinema.crm.modules.model.OrderCancelData;
+import com.cinema.crm.modules.model.OrderCommitData;
+import com.cinema.crm.modules.model.ReqRefundTrans;
 import com.cinema.crm.modules.model.SingleRefundRequest;
 import com.cinema.crm.modules.refunds.model.GyftrCancelationResponse;
 import com.cinema.crm.modules.refunds.model.JuspayRefundResponse;
 import com.cinema.crm.modules.refunds.service.RefundService;
 import com.cinema.crm.modules.utils.EmailUtil;
 import com.cinema.crm.modules.utils.RefundUtility;
+import com.cinema.crm.modules.utils.ShowbizUtil;
 import com.google.gson.Gson;
 
 import lombok.extern.log4j.Log4j2;
@@ -59,6 +79,11 @@ public class RefundServiceImpl implements RefundService {
 	private final GiftcardRedeemDetailRepository giftcardRedeemDetailRepository;
 	private final JuspayRedeemDetailRepository juspayRedeemDetailRepository;
 	private final GyftrRedeemDetailRepository gyftrRedeemDetailRepository;
+	private final ShowbizUtil showbizUtil;
+	private final CinemaRepository cinemaRepository;
+	private final PosRepository posRepository;
+	private final OrderBookingRepository orderBookingRepository;
+	
 	
 	public RefundServiceImpl(TransactionsRepository transactionsRepository,
 			RefundDetailsRepository refundDetailsRepository,RefundUtility refundUtility,EmailUtil emailUtil,
@@ -66,7 +91,9 @@ public class RefundServiceImpl implements RefundService {
 			JuspayRedeemDetailRepository juspayRedeemDetailRepository,
 			ConfigurationRepository configurationRepository,
 			GiftcardRedeemDetailRepository giftcardRedeemDetailRepository,
-			GyftrRedeemDetailRepository gyftrRedeemDetailRepository) {
+			GyftrRedeemDetailRepository gyftrRedeemDetailRepository,
+			ShowbizUtil showbizUtil,CinemaRepository cinemaRepository,PosRepository posRepository,
+			OrderBookingRepository orderBookingRepository) {
 
 		this.transactionsRepository = transactionsRepository;
 		this.refundDetailsRepository = refundDetailsRepository;
@@ -77,7 +104,10 @@ public class RefundServiceImpl implements RefundService {
 		this.juspayRedeemDetailRepository = juspayRedeemDetailRepository;
 		this.giftcardRedeemDetailRepository = giftcardRedeemDetailRepository;
 		this.gyftrRedeemDetailRepository = gyftrRedeemDetailRepository;
-
+		this.showbizUtil = showbizUtil;
+		this.cinemaRepository = cinemaRepository;
+		this.posRepository = posRepository;
+		this.orderBookingRepository = orderBookingRepository;
 	}
 
 	@Override
@@ -265,6 +295,114 @@ public class RefundServiceImpl implements RefundService {
 				.message(Message.BOOKING_NOT_FOUNDED)
 				.build());
 	}
+	
+	public OrderCancelData cancelShowbizTransaction(String bookingId) {
+        try {
+        	Transactions request = transactionsRepository.findById(bookingId).get();
+        	
+        	if(Objects.isNull(request)) {
+        		 return null;
+        	}
+        	OrderCommitData orderData = new OrderCommitData();
+        	Cinema cinema = cinemaRepository.findByTheatreId(request.getTheaterId());
+        	Pos pos = posRepository.findByName(cinema.getPos());
+        	String transType = ShowBizTransType.Normal;
+			if (request.getBookType().equals(TransType.FOOD)) {
+				if (request.getFoodType().equals(Foodtype.ONSEAT)) {
+					transType = ShowBizTransType.InCinemaFB;
+				} else {
+					transType = ShowBizTransType.OnlyFB;
+				}
+			}
+        	// ticket verify
+        	if(request.getBookType().equals("BOOKING")) {
+        		String soldStatusResponse = showbizUtil.soldStatus(cinema, pos, request.getPlatform(), request.getChain(), request.getTransId());
+            	if (StringUtils.hasText(soldStatusResponse)) {
+                    orderData = showbizUtil.getShowBizOrderDataVerify(soldStatusResponse);
+                    orderData.setCinemaId(cinema.getTheatreId());
+                    orderData.setChain(cinema.getChainKey());
+                    orderData.setPos(cinema.getPos());
+					if (orderData.isSuccess()) {
+						log.info("showbiz soldStatus success:: {}", new Gson().toJson(orderData));
+					} else {
+						return null;
+					}
+                }
+        	}else {
+        		// food verify
+    			String soldStatusFbResponse =  showbizUtil.soldStatusFb(cinema, pos,request.getPlatform(), request.getChain(), request.getTransId(),transType);
+            	if (StringUtils.hasText(soldStatusFbResponse)) {
+                    orderData = showbizUtil.getShowBizOrderDataVerifyFood(soldStatusFbResponse);
+                    orderData.setCinemaId(cinema.getTheatreId());
+                    orderData.setChain(cinema.getChainKey());
+                    orderData.setPos(cinema.getPos());
+					if (orderData.isSuccess()) {
+						log.info("showbiz soldStatusFb success:: {}", new Gson().toJson(orderData));
+					} else {
+						return null;
+					}
+                } 
+        	}
+        	
+        	ReqRefundTrans req = new ReqRefundTrans();
+        	req.setCcode(request.getTheaterId());
+        	req.setPlatform(request.getPlatform());
+        	req.setChain(request.getChain());
+        	req.setBookId(String.valueOf(request.getOrderId()));
+        	req.setCardNumber("1234567890000000");
+        	req.setCustomerName(request.getName());
+        	DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        	req.setReceiptNo(request.getBookingId());
+        	req.setRemarks("User Cancellation");
+        	LocalDateTime showTime = request.getShowTime();
+        	Date showTimeDate = Date.from(showTime.atZone(ZoneId.systemDefault()).toInstant());
+        	DateFormat sDdate = new SimpleDateFormat("yyyy-MM-dd");
+        	DateFormat stdate = new SimpleDateFormat("HH:mm:ss");
+        	req.setShowDate(sDdate.format(showTimeDate));
+        	req.setShowTime(stdate.format(showTimeDate));
+        	req.setScreenId(request.getScreenId());
+        	req.setNoOfTicket(request.getNumOfSeats());
+        	if (request.getNumOfSeats() != 0) {
+        	    req.setRate(decimalFormat.format((double) request.getTicketPrice() / 100));
+        	    req.setValue(decimalFormat.format((double) request.getTotalTicketPrice() / 100));
+        	} else {
+        	    req.setRate("0.00");
+        	    req.setValue("0.00");
+        	}
+        	req.setFbNoOfItems(request.getFbCount());
+        	if (request.getFbCount() != 0) {
+        	    req.setFbValue(decimalFormat.format((double) request.getFbTotalPrice() / 100));
+        	} else {
+        	    req.setFbValue("0.00");
+        	}
+        	req.setPgId("0");
+        	if (request.getBookType().equalsIgnoreCase(Constants.ORDER_TYPE.booking.toString())) {
+        	    req.setTransType("Normal");
+        	} else if (request.getBookType().equalsIgnoreCase(Constants.ORDER_TYPE.food.toString())) {
+        	    req.setTransType(Constants.ShowBizTransType.OnlyFB.toString());
+        	}
+        	    
+        	  String cancelBuyResponse = showbizUtil.cancelBuy(cinema, pos, req);
+				if (StringUtils.hasText(cancelBuyResponse)) {
+					OrderCancelData orderCancelData = showbizUtil.getShowBizCancelBuyData(cancelBuyResponse, cinema,
+							req);
+					log.info("REFUND DATA::" + new Gson().toJson(orderCancelData));
+					if (orderCancelData.isSuccess()) {
+						log.info("showbiz cancelBuy success:: {}" , new Gson().toJson(orderCancelData));
+						return orderCancelData;
+					} else {
+						// error
+						log.error("showbiz cancelBuy error message:: {}" , new Gson().toJson(orderCancelData.getErrorMsg()));
+						log.error("showbiz cancelBuy error:: {}" , new Gson().toJson(orderCancelData));
+						return orderCancelData;
+					}
+				}
+
+        } catch (Exception e) {
+        	log.error("exception occured in showbiz cancel for booking id : {} :: {}", bookingId ,  e.getMessage());
+        }
+        return null;
+    }
 
 	public boolean jusPayRefund(String bookingid,String refundAmt, Transactions booking, boolean rollback) {
         try {

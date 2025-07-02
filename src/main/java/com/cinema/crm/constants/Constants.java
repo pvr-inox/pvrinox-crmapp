@@ -35,4 +35,32 @@ public class Constants {
 		public static final String ALREADY_PROCESSED = "A refund has already been processed for this order with this unique booking id.";
 		public static final String REFUND_REQUEST_RAISED = "Refund request was raised for this transaction.";
 	}
+	
+	public static class ShowBizTransType {
+		public static final String Normal = "Normal";
+		public static final String InCinemaFB = "InCinemaFB";
+		public static final String OnlyFB = "OnlyFB";
+		public static final String IssueVoucher = "IssueVoucher";
+	}
+
+	public static class Foodtype {
+		public static final String NORMAL = "NORMAL";
+		public static final String ONSEAT = "ONSEAT";
+		public static final String ADDFOOD = "ADDFOOD";
+		public static final String ONLYFOOD = "ONLYFOOD";
+	}
+	
+	public static class TransType {
+    	public static final String BOOKING = "BOOKING";
+    	public static final String BOOKED = "BOOKED";
+    	public static final String FOOD = "FOOD";
+    }
+	
+	 public static class ORDER_TYPE {
+	        public static final String booking = "BOOKING";
+	        public static final String food = "FOOD";
+	        public static final String giftcard = "GIFTCARD";
+	        public static final String passport = "PASSPORT";
+	        public static final String show = "SHOWBOOK";
+		}
 }

@@ -84,7 +84,7 @@ public class Transactions {
 //	@Column(name = "fb_discount")
 	private Long fbDiscount;
 //	@Column(name = "fb_total_price")
-//	private Long fbTotalPrice;
+	private Long fbTotalPrice;
 //	@Column(name = "fnb")
 	private Boolean fnb;
 //	@Column(name = "food_type")
