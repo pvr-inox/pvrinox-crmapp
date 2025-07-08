@@ -199,28 +199,37 @@ public class RefundServiceImpl implements RefundService {
 		
 	}
 	
-	private Object cancelGiftCard(String bookingId) {
+	private boolean cancelGiftCard(String bookingId,Transactions transactions) {
+		boolean status = false;
 		try {
-			GiftcardRedeemDetail giftcardRedeemDetail = giftcardRedeemDetailRepository.findByBookingId(bookingId);
-			if(Objects.isNull(giftcardRedeemDetail)) {
+			final List<GiftcardRedeemDetail> list = giftcardRedeemDetailRepository.findAllByBookingIdAndStatus(bookingId, Constants.REDEEMED);
+			if(Objects.isNull(list)) {
 				log.error("Booking not found for booking id: {}", bookingId);
-				return null;
+				return status;
 			}
-			generateGiftCardToken(); //generate new token for gift card
-			Map<String, Object> cancelResponse = refundUtility.cancelGiftCard(giftcardRedeemDetail);
-			if (Objects.nonNull(cancelResponse) && 0 == (int) cancelResponse.get("ResponseCode")
-					&& "Transaction successful.".equalsIgnoreCase((String) cancelResponse.get("ResponseMessage"))) {
-				log.info("cancel gift card success response: " ,new Gson().toJson(cancelResponse));
-			}else{
-				log.info("cancel gift card failed response: " ,new Gson().toJson(cancelResponse));
+			generateGiftCardToken();
+			for (GiftcardRedeemDetail giftcardRedeemDetail : list) {
+				Map<String, Object> cancelResponse = refundUtility.cancelGiftCard(giftcardRedeemDetail);
+				if (Objects.nonNull(cancelResponse) && (0 == (int) cancelResponse.get("ResponseCode")  ||  10001 == (int) cancelResponse.get("ResponseCode") || 10084 == (int) cancelResponse.get("ResponseCode"))
+						&& "Transaction successful.".equalsIgnoreCase((String) cancelResponse.get("ResponseMessage"))) {
+					log.info("cancel gift card success response: " ,new Gson().toJson(cancelResponse));
+					giftcardRedeemDetail.setStatus(Constants.ROLLEDBACK);
+					giftcardRedeemDetailRepository.save(giftcardRedeemDetail);
+					transactions.setBookingStatus(Constants.CANCEL_COMPLETE);
+					transactions.setPaymentStatus(Constants.ROLLEDBACK);
+					transactions.setCancelTime(LocalDateTime.now());
+                    transactionsRepository.save(transactions);
+					status = true;
+				}else{
+					log.info("cancel gift card failed response: " ,new Gson().toJson(cancelResponse));
+					status = false;
+				}
 			}
-			return cancelResponse;
-			
 		} catch (Exception e) {
-			log.error("GIFT CARD ERROR: ", e);
+			log.error("Exception occured in gift card cancel :: {}", e);
+			return status;
 		}
-		
-		return null;
+		return status;
 	}
 	
 	public void generateGiftCardToken() {
@@ -264,12 +273,23 @@ public class RefundServiceImpl implements RefundService {
 
 		if (Objects.nonNull(transactions) && transactions.getBookingStatus().equals(Constants.REFUND_INITIATE)) {
 			boolean refunded = false;
-			if(transactions.getJuspayused()) {
-				refunded = this.jusPayRefund(singleRefundReq.getBookingId(), singleRefundReq.getRefundAmount(), transactions, true);
-			}
 			
-			if (transactions.getGyfterused()) {
-				refunded = this.gyftrRefund(singleRefundReq.getBookingId(), transactions);
+			OrderCancelData orderCancelData = this.cancelShowbizTransaction(transactions.getId());
+			
+			if(Objects.nonNull(orderCancelData) && orderCancelData.isSuccess()) {
+				
+				if(transactions.getJuspayused()) {
+					refunded = this.jusPayRefund(singleRefundReq.getBookingId(), singleRefundReq.getRefundAmount(), transactions, true);
+				}
+				
+				if (transactions.getGyfterused()) {
+					refunded = this.gyftrRefund(singleRefundReq.getBookingId(), transactions);
+				}
+				
+				if (transactions.getGiftcardused()) {
+					refunded = this.cancelGiftCard(transactions.getId(),transactions);
+				}
+				
 			}
 			
 			if (refunded) {
@@ -279,13 +299,20 @@ public class RefundServiceImpl implements RefundService {
 						.responseCode(RespCode.SUCCESS)
 						.message(Message.REFUND_REQUEST_RAISED)
 						.build());
+			}else {
+				return ResponseEntity.ok(InitiateRefundResponse.builder()
+						.bookingId(singleRefundReq.getBookingId())
+						.result(Result.ERROR)
+						.responseCode(RespCode.FAILED)
+						.message(Message.REFUND_REQUEST_ERROR)
+						.build());
 			}
-			return ResponseEntity.ok(InitiateRefundResponse.builder()
-					.bookingId(singleRefundReq.getBookingId())
-					.result(Result.SUCCESS)
-					.responseCode(RespCode.SUCCESS)
-					.message(Message.REQUESTED_NODAL_OFFICER)
-					.build());
+//			return ResponseEntity.ok(InitiateRefundResponse.builder()
+//					.bookingId(singleRefundReq.getBookingId())
+//					.result(Result.SUCCESS)
+//					.responseCode(RespCode.SUCCESS)
+//					.message(Message.REQUESTED_NODAL_OFFICER)
+//					.build());
 		}
 		
 		return ResponseEntity.ok(InitiateRefundResponse.builder()
@@ -353,7 +380,7 @@ public class RefundServiceImpl implements RefundService {
         	req.setCustomerName(request.getName());
         	DecimalFormat decimalFormat = new DecimalFormat("#.00");
         	req.setReceiptNo(request.getBookingId());
-        	req.setRemarks("User Cancellation");
+        	req.setRemarks("Crm Cancellation");
         	LocalDateTime showTime = request.getShowTime();
         	Date showTimeDate = Date.from(showTime.atZone(ZoneId.systemDefault()).toInstant());
         	DateFormat sDdate = new SimpleDateFormat("yyyy-MM-dd");
@@ -375,7 +402,28 @@ public class RefundServiceImpl implements RefundService {
         	} else {
         	    req.setFbValue("0.00");
         	}
-        	req.setPgId("0");
+        	
+        	
+			if (request.getGyfterused()) {
+				req.setPgId("14");
+			} else if (request.getGiftcardused()) {
+				req.setPgId("13");
+			} else if (request.getPaymode().equalsIgnoreCase("INSTAPAY")) {
+				req.setPgId("6");
+			} else if (request.getPgType().equalsIgnoreCase("WALLET")) {
+				if (request.getPaymode().equalsIgnoreCase("PAYTM")) {
+					req.setPgId("5");
+				} else if (request.getPaymode().equalsIgnoreCase("MOBIKWIK")) {
+					req.setPgId("11");
+				} else if (request.getPaymode().equalsIgnoreCase("AMAZONPAYLATER")
+						|| request.getPaymode().equalsIgnoreCase("AMAZONPAY")) {
+					req.setPgId("3");
+				}
+			} else{
+				req.setPgId("4");
+			}
+        	
+			
         	if (request.getBookType().equalsIgnoreCase(Constants.ORDER_TYPE.booking.toString())) {
         	    req.setTransType("Normal");
         	} else if (request.getBookType().equalsIgnoreCase(Constants.ORDER_TYPE.food.toString())) {
@@ -386,7 +434,7 @@ public class RefundServiceImpl implements RefundService {
 				if (StringUtils.hasText(cancelBuyResponse)) {
 					OrderCancelData orderCancelData = showbizUtil.getShowBizCancelBuyData(cancelBuyResponse, cinema,
 							req);
-					log.info("REFUND DATA::" + new Gson().toJson(orderCancelData));
+					//log.info("REFUND DATA::" + new Gson().toJson(orderCancelData));
 					if (orderCancelData.isSuccess()) {
 						log.info("showbiz cancelBuy success:: {}" , new Gson().toJson(orderCancelData));
 						return orderCancelData;
