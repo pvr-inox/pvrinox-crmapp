@@ -147,6 +147,14 @@ public class RefundServiceImpl implements RefundService {
 					.paymentGateway(singleRefundReq.getPaymentGateway())
 					.remarks(singleRefundReq.getRemarks())
 					.refundStatus(Constants.REFUND_INITIATE)
+					.seatNo(transactions.getSeats())
+				    .paymentMode(transactions.getPaymode())
+				    .voucherCode(transactions.getCvpVouchers())
+				    .voucherStatus(transactions.getCouponused() ? Constants.REDEEMED : "")
+				    .submittedDate(LocalDateTime.now()) 
+				    .isRefunded(false)
+				    .nodalOfficerApproval(Constants.Result.PENDING)
+				    .utrNumber("")
 					.build();
 			
 			// TODO EMAIL SEND TO NODAL OFFICER
@@ -272,6 +280,20 @@ public class RefundServiceImpl implements RefundService {
 					.message(Message.ALREADY_PROCESSED)
 					.build());
 		}
+		Optional<RefundDetails> refundDetails = refundDetailsRepository.findByBookingId(singleRefundReq.getBookingId());
+		if(singleRefundReq.getAction().equalsIgnoreCase("Reject")) {
+			if(refundDetails.isPresent()) {
+				RefundDetails data = refundDetails.get();
+				data.setNodalOfficerApproval(Constants.REJECTED);
+				refundDetailsRepository.save(data);
+			}
+			return ResponseEntity.ok(InitiateRefundResponse.builder()
+					.bookingId(singleRefundReq.getBookingId())
+					.result(Result.SUCCESS)
+					.responseCode(RespCode.SUCCESS)
+					.message(Message.REFUND_REQUEST_REJECTED)
+					.build());
+		}
 
 		if (Objects.nonNull(transactions) && transactions.getBookingStatus().equals(Constants.REFUND_INITIATE)) {
 			boolean refunded = false;
@@ -295,6 +317,12 @@ public class RefundServiceImpl implements RefundService {
 			}
 			
 			if (refunded) {
+				if(refundDetails.isPresent()) {
+					RefundDetails data = refundDetails.get();
+					data.setNodalOfficerApproval(Constants.APPROVED);
+					refundDetailsRepository.save(data);
+				}
+				
 				return ResponseEntity.ok(InitiateRefundResponse.builder()
 						.bookingId(singleRefundReq.getBookingId())
 						.result(Result.SUCCESS)
@@ -477,6 +505,7 @@ public class RefundServiceImpl implements RefundService {
                                 juspayRedeemDetail.setRefundId(refundVO.getRef());
                                 juspayRedeemDetail.setResponseMessage(refundVO.getStatus());
                                 juspayRedeemDetailRepository.save(juspayRedeemDetail);
+                                
                                 log.debug("amount has already been refunded successfully for booking id : {}, payment id : {}", bookingid, juspayRedeemDetail.getId());
                             } else {
                                 log.debug("refunded amount for booking id : {} : {}", bookingid, refundAmt);

@@ -13,6 +13,8 @@ public class Constants {
 	public static final String CRM_ROLLEDBACK = "CRM_ROLLEDBACK";
 	public static final String CANCEL = "CANCEL";
 	public static final String REDEEMED = "REDEEMED";
+	public static final String APPROVED = "APPROVED";
+	public static final String REJECTED = "REJECTED";
 
 	public static class RespCode {
 		public static final String SUCCESS = "00";
@@ -36,6 +38,7 @@ public class Constants {
 		public static final String ALREADY_PROCESSED = "A refund has already been processed for this order with this unique booking id.";
 		public static final String REFUND_REQUEST_RAISED = "Refund request was raised for this transaction.";
 		public static final String REFUND_REQUEST_ERROR = "Failed to initiate refund.";
+		public static final String REFUND_REQUEST_REJECTED = "Refund request rejected.";
 	}
 	
 	public static class ShowBizTransType {
