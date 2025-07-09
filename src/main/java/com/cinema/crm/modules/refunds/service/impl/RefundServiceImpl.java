@@ -1,11 +1,11 @@
 package com.cinema.crm.modules.refunds.service.impl;
 
-import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -35,7 +35,6 @@ import com.cinema.crm.databases.pvrinox.entities.Email;
 import com.cinema.crm.databases.pvrinox.entities.GiftcardRedeemDetail;
 import com.cinema.crm.databases.pvrinox.entities.GyftrRedeemDetail;
 import com.cinema.crm.databases.pvrinox.entities.JuspayRedeemDetail;
-import com.cinema.crm.databases.pvrinox.entities.OrderBooking;
 import com.cinema.crm.databases.pvrinox.entities.Pos;
 import com.cinema.crm.databases.pvrinox.entities.Transactions;
 import com.cinema.crm.databases.pvrinox.repositories.CinemaRepository;
@@ -50,12 +49,15 @@ import com.cinema.crm.databases.pvrinoxcrm.entities.NotificationTemplate;
 import com.cinema.crm.databases.pvrinoxcrm.entities.RefundDetails;
 import com.cinema.crm.databases.pvrinoxcrm.repositories.NotificationTemplateRepository;
 import com.cinema.crm.databases.pvrinoxcrm.repositories.RefundDetailsRepository;
+import com.cinema.crm.modules.model.CancelSessionRequest;
 import com.cinema.crm.modules.model.JuspayOrderStatus;
 import com.cinema.crm.modules.model.JuspayRefund;
 import com.cinema.crm.modules.model.OrderCancelData;
 import com.cinema.crm.modules.model.OrderCommitData;
 import com.cinema.crm.modules.model.ReqRefundTrans;
 import com.cinema.crm.modules.model.SingleRefundRequest;
+import com.cinema.crm.modules.model.CancelSessionResponse;
+import com.cinema.crm.modules.model.TransactionRefundResponse;
 import com.cinema.crm.modules.refunds.model.GyftrCancelationResponse;
 import com.cinema.crm.modules.refunds.model.JuspayRefundResponse;
 import com.cinema.crm.modules.refunds.service.RefundService;
@@ -325,49 +327,49 @@ public class RefundServiceImpl implements RefundService {
 	
 	public OrderCancelData cancelShowbizTransaction(String bookingId) {
         try {
-        	Transactions request = transactionsRepository.findById(bookingId).get();
-        	
-        	if(Objects.isNull(request)) {
-        		 return null;
-        	}
-        	OrderCommitData orderData = new OrderCommitData();
-        	Cinema cinema = cinemaRepository.findByTheatreId(request.getTheaterId());
-        	Pos pos = posRepository.findByName(cinema.getPos());
-        	String transType = ShowBizTransType.Normal;
-			if (request.getBookType().equals(TransType.FOOD)) {
-				if (request.getFoodType().equals(Foodtype.ONSEAT)) {
-					transType = ShowBizTransType.InCinemaFB;
-				} else {
-					transType = ShowBizTransType.OnlyFB;
-				}
-			}
-        	// ticket verify
-        	if(request.getBookType().equals("BOOKING")) {
-        		String soldStatusResponse = showbizUtil.soldStatus(cinema, pos, request.getPlatform(), request.getChain(), request.getTransId());
-            	if (StringUtils.hasText(soldStatusResponse)) {
+            Transactions request = transactionsRepository.findById(bookingId).get();
+            
+            if(Objects.isNull(request)) {
+                 return null;
+            }
+            OrderCommitData orderData = new OrderCommitData();
+            Cinema cinema = cinemaRepository.findByTheatreId(request.getTheaterId());
+            Pos pos = posRepository.findByName(cinema.getPos());
+            String transType = ShowBizTransType.Normal;
+            if (request.getBookType().equals(TransType.FOOD)) {
+                if (request.getFoodType().equals(Foodtype.ONSEAT)) {
+                    transType = ShowBizTransType.InCinemaFB;
+                } else {
+                    transType = ShowBizTransType.OnlyFB;
+                }
+            }
+            // ticket verify
+            if(request.getBookType().equals("BOOKING")) {
+                String soldStatusResponse = showbizUtil.soldStatus(cinema, pos, request.getPlatform(), request.getChain(), request.getTransId());
+                if (StringUtils.hasText(soldStatusResponse)) {
                     orderData = showbizUtil.getShowBizOrderDataVerify(soldStatusResponse);
                     orderData.setCinemaId(cinema.getTheatreId());
                     orderData.setChain(cinema.getChainKey());
                     orderData.setPos(cinema.getPos());
-					if (orderData.isSuccess()) {
-						log.info("showbiz soldStatus success:: {}", new Gson().toJson(orderData));
-					} else {
-						return null;
-					}
+                    if (orderData.isSuccess()) {
+                        log.info("showbiz soldStatus success:: {}", new Gson().toJson(orderData));
+                    } else {
+                        return null;
+                    }
                 }
-        	}else {
-        		// food verify
-    			String soldStatusFbResponse =  showbizUtil.soldStatusFb(cinema, pos,request.getPlatform(), request.getChain(), request.getTransId(),transType);
-            	if (StringUtils.hasText(soldStatusFbResponse)) {
+            }else {
+                // food verify
+                String soldStatusFbResponse =  showbizUtil.soldStatusFb(cinema, pos,request.getPlatform(), request.getChain(), request.getTransId(),transType);
+                if (StringUtils.hasText(soldStatusFbResponse)) {
                     orderData = showbizUtil.getShowBizOrderDataVerifyFood(soldStatusFbResponse);
                     orderData.setCinemaId(cinema.getTheatreId());
                     orderData.setChain(cinema.getChainKey());
                     orderData.setPos(cinema.getPos());
-					if (orderData.isSuccess()) {
-						log.info("showbiz soldStatusFb success:: {}", new Gson().toJson(orderData));
-					} else {
-						return null;
-					}
+                    if (orderData.isSuccess()) {
+                        log.info("showbiz soldStatusFb success:: {}", new Gson().toJson(orderData));
+                    } else {
+                        return null;
+                    }
                 } 
         	}
         	
@@ -447,7 +449,7 @@ public class RefundServiceImpl implements RefundService {
 				}
 
         } catch (Exception e) {
-        	log.error("exception occured in showbiz cancel for booking id : {} :: {}", bookingId ,  e.getMessage());
+            log.error("exception occured in showbiz cancel for booking id : {} :: {}", bookingId ,  e.getMessage());
         }
         return null;
     }
@@ -566,4 +568,111 @@ public class RefundServiceImpl implements RefundService {
         }
         return rollback;
     }
+    
+    
+    @Override
+    public ResponseEntity<Object> cancelTransactionsBySession(CancelSessionRequest request) {
+
+        List<Transactions> allSessionTransactions = transactionsRepository.findAllBySessionId(request.getSessionId());
+
+        List<Transactions> nonCancelledTransactions = allSessionTransactions.stream()
+            .filter(t -> !Constants.CANCEL_COMPLETE.equalsIgnoreCase(t.getBookingStatus()))
+            .collect(Collectors.toList());
+
+        List<Transactions> transactionsList;
+
+        if ("f".equalsIgnoreCase(request.getRefundType())) {
+            transactionsList = nonCancelledTransactions;
+        } else {
+            transactionsList = transactionsRepository.findAllById(request.getTransactionIds());
+        }
+
+        List<TransactionRefundResponse> refundResponses = new ArrayList<>();
+        int successCount = 0;
+
+        for (Transactions txn : transactionsList) {
+            TransactionRefundResponse resp = new TransactionRefundResponse();
+            resp.setTransactionId(txn.getId());
+
+            Map<String, Object> refundMap = new LinkedHashMap<>();
+            Map<String, String> showbizResult = new LinkedHashMap<>();
+
+            var showbizData = cancelShowbizTransaction(txn.getId());
+            if (showbizData != null && showbizData.isSuccess()) {
+                showbizResult.put("status", "SUCCESS");
+                showbizResult.put("message", "Showbiz cancellation successful");
+            } else {
+                showbizResult.put("status", "FAILED");
+                showbizResult.put("message", showbizData != null ? showbizData.getErrorMsg() : "No response from Showbiz");
+            }
+
+            boolean refunded = false;
+            double totalRefunded = 0.0;
+
+            // Juspay Refund
+            if (Boolean.TRUE.equals(txn.getJuspayused())) {
+                boolean result = jusPayRefund(txn.getId(), String.valueOf(txn.getJuspayamt()), txn, true);
+                refunded |= result;
+
+                Map<String, Object> juspayMap = new LinkedHashMap<>();
+                juspayMap.put("refunded", result);
+                juspayMap.put("amount", txn.getJuspayamt());
+                refundMap.put("juspay", juspayMap);
+
+                if (result) totalRefunded += txn.getJuspayamt();
+            }
+
+            // Gyftr Refund
+            if (Boolean.TRUE.equals(txn.getGyfterused())) {
+                boolean result = gyftrRefund(txn.getId(), txn);
+                refunded |= result;
+
+                Map<String, Object> gyftrMap = new LinkedHashMap<>();
+                gyftrMap.put("refunded", result);
+                gyftrMap.put("message", result ? "Refunded" : "Not refunded");
+                refundMap.put("gyftr", gyftrMap);
+            }
+
+            // Giftcard Refund
+            if (Boolean.TRUE.equals(txn.getGiftcardused())) {
+                Object giftResp = cancelGiftCard(txn.getId(),txn);
+                boolean result = giftResp != null;
+                refunded |= result;
+
+                Map<String, Object> giftMap = new LinkedHashMap<>();
+                giftMap.put("refunded", result);
+                giftMap.put("message", result ? "Refunded" : "Failed");
+                refundMap.put("giftcard", giftMap);
+            }
+
+            if (refunded) {
+                txn.setBookingStatus(Constants.CANCEL_COMPLETE);
+                txn.setPaymentStatus(Constants.ROLLEDBACK);
+                txn.setCancelTime(LocalDateTime.now());
+                transactionsRepository.save(txn);
+
+                resp.setBookingStatus(Constants.CANCEL_COMPLETE);
+                resp.setCancelTime(LocalDateTime.now());
+                successCount++;
+            } else {
+                resp.setBookingStatus(txn.getBookingStatus());
+            }
+
+            resp.setRefundDetails(refundMap);
+            resp.setShowbizStatus(showbizResult);
+            resp.setRefundedAmount(totalRefunded);
+            refundResponses.add(resp);
+        }
+
+        CancelSessionResponse finalResp = new CancelSessionResponse();
+        finalResp.setRefundResponses(refundResponses);
+        finalResp.setTotalTransactions(nonCancelledTransactions.size()); // ✅ always non-cancelled count
+        finalResp.setSuccessfullyRefunded(successCount);
+        finalResp.setFailedRefunds(transactionsList.size() - successCount);
+        finalResp.setPartialRefund("p".equalsIgnoreCase(request.getRefundType()));
+        finalResp.setFullyRefunded("f".equalsIgnoreCase(request.getRefundType()) && successCount == transactionsList.size());
+
+        return ResponseEntity.ok(finalResp);
+    }
+
 }
