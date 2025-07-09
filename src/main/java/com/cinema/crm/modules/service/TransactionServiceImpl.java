@@ -61,28 +61,14 @@ public class TransactionServiceImpl implements TransactionService {
 			List<Transactions> orderBookingList = query.getResultList();
 			List<TransactionResp> responseList = orderBookingList.stream().map(this::convertToTransactionResp).toList();
 			
-			if(transactionReq.nodalOfficer) {
-				
-				
 				returnObj.setMsg(responseList.isEmpty() ? "No Data Found" : "success");
 				returnObj.setOutput(responseList);
 				returnObj.setResponseCode(200);
 				returnObj.setResult("sucess");
 				return ResponseEntity.ok(returnObj);
-				
-			}else{
-				
-
-				returnObj.setMsg(responseList.isEmpty() ? "No Data Found" : "success");
-				returnObj.setOutput(responseList);
-				returnObj.setResponseCode(200);
-				returnObj.setResult("sucess");
-				return ResponseEntity.ok(returnObj);
-				
-			}
 
 		} catch (Exception e) {
-			log.error("Exception getAllTransactions {} : ",e);
+			log.error("Exception occured in getAllTransactions {} : ",e);
 			returnObj.setMsg("error");
 			returnObj.setOutput(null);
 			returnObj.setResponseCode(500);

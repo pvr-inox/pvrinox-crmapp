@@ -14,6 +14,5 @@ public class TransactionReq {
 	public String fromDate;
 	public String uptoDate;
 	public String transType;
-	public boolean nodalOfficer;
 
 }
