@@ -1,17 +1,20 @@
 package com.cinema.crm.modules.service;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.cinema.crm.databases.pvrinox.entities.OrderBooking;
+import com.cinema.crm.databases.pvrinox.entities.Transactions;
 import com.cinema.crm.databases.pvrinox.repositories.OrderBookingRepository;
 import com.cinema.crm.databases.pvrinox.repositories.TransactionsRepository;
+import com.cinema.crm.databases.pvrinoxcrm.entities.RefundDetails;
 import com.cinema.crm.databases.pvrinoxcrm.repositories.RefundDetailsRepository;
 import com.cinema.crm.modules.model.TransactionReq;
 import com.cinema.crm.modules.model.TransactionResp;
@@ -42,64 +45,82 @@ public class TransactionServiceImpl implements TransactionService {
 		WSReturnObj<Object> returnObj = new WSReturnObj<>();
 		try {
 
-			SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-			Date start = StringUtils.isNoneEmpty(transactionReq.getFromDate())
-					? formater.parse(transactionReq.getFromDate())
+			LocalDateTime start = StringUtils.isNoneEmpty(transactionReq.getFromDate())
+					? LocalDateTime.parse(transactionReq.getFromDate() + " 00:00:00", formatter)
 					: null;
-			Date end = StringUtils.isNoneEmpty(transactionReq.getUptoDate())
-					? formater.parse(transactionReq.getUptoDate())
+			LocalDateTime end = StringUtils.isNoneEmpty(transactionReq.getUptoDate())
+					? LocalDateTime.parse(transactionReq.getUptoDate() + " 23:59:59", formatter)
 					: null;
 
 			String stringQuery = buildTransactionData(transactionReq);
-			TypedQuery<OrderBooking> query = entityManager.createQuery(stringQuery, OrderBooking.class);
+			TypedQuery<Transactions> query = entityManager.createQuery(stringQuery, Transactions.class);
 			transactionQueryParamSetter(query, start, end, transactionReq);
 
-			List<OrderBooking> orderBookingList = query.getResultList();
+			List<Transactions> orderBookingList = query.getResultList();
 			List<TransactionResp> responseList = orderBookingList.stream().map(this::convertToTransactionResp).toList();
+			
+			if(transactionReq.nodalOfficer) {
+				
+				
+				returnObj.setMsg(responseList.isEmpty() ? "No Data Found" : "success");
+				returnObj.setOutput(responseList);
+				returnObj.setResponseCode(200);
+				returnObj.setResult("sucess");
+				return ResponseEntity.ok(returnObj);
+				
+			}else{
+				
 
-			returnObj.setMsg("success");
-			returnObj.setOutput(responseList);
-			returnObj.setResponseCode(200);
-			returnObj.setResult("sucess");
-			return ResponseEntity.ok(returnObj);
+				returnObj.setMsg(responseList.isEmpty() ? "No Data Found" : "success");
+				returnObj.setOutput(responseList);
+				returnObj.setResponseCode(200);
+				returnObj.setResult("sucess");
+				return ResponseEntity.ok(returnObj);
+				
+			}
 
 		} catch (Exception e) {
+			log.error("Exception getAllTransactions {} : ",e);
 			returnObj.setMsg("error");
 			returnObj.setOutput(null);
 			returnObj.setResponseCode(500);
 			returnObj.setResult("error");
 			return ResponseEntity.ok(returnObj);
-
 		}
 
 	}
 
-	private TransactionResp convertToTransactionResp(OrderBooking order) {
+	private TransactionResp convertToTransactionResp(Transactions order) {
+		Optional<RefundDetails> data = refundDetailsRepository.findByBookingId(order.getId());
+		RefundDetails refundDetails = new RefundDetails();
+		if(data.isPresent()) {
+			refundDetails = data.get();
+		}
 		TransactionResp resp = new TransactionResp();
-		resp.bookingId = order.getBookingId();
-		resp.eventName = order.getOrderFilmCinema().getFilmName();
-		resp.orderId = order.getOrderIdEx();
+		resp.bookingId = order.getId();
+		resp.eventName = order.getFilmName();
+		resp.orderId = order.getBookingId();
 		resp.mobile = order.getMobile();
-		resp.seatNumber = order.getOrderTicket().getSeats();
+		resp.seatNumber = order.getSeats();
 		resp.paymodes = order.getPaymode();
-		resp.vouchers = order.getOrderTicket().getCvpVouchers();
+		resp.vouchers = order.getCvpVouchers();
 		resp.voucherStatus = "";
-		resp.cancelReasons = "";
-		resp.cancelDate = order.getModifiedAt().toGMTString();
+		resp.cancelReasons = refundDetails.getRemarks();
+		resp.cancelDate = order.getCreatedAt().toString();
 		resp.refunded = false;
-		resp.totalAmount = order.getTotalPrice();
+		resp.totalAmount = order.getTotalTicketPrice() + order.getFbTotalPrice();
 		resp.approval = "";
-		resp.refundStatus = "";
+		resp.refundStatus = refundDetails.getRefundStatus();
 		resp.utrNumber = "";
 		resp.customerName = order.getName();
-
 		return resp;
 	}
 
 	private String buildTransactionData(TransactionReq transactionReq) {
 
-		String baseQuery = "SELECT o FROM OrderBooking o WHERE bookingStatus = 'BOOKED' ";
+		String baseQuery = "SELECT o FROM Transactions o WHERE bookingStatus = 'BOOKED' ";
 		StringBuilder queryBuilder = new StringBuilder(baseQuery);
 
 		if (StringUtils.isNotBlank(transactionReq.getMobile())) {
@@ -126,7 +147,7 @@ public class TransactionServiceImpl implements TransactionService {
 		return queryBuilder.toString();
 	}
 
-	private void transactionQueryParamSetter(Object query, Date start, Date end, TransactionReq transactionReq) {
+	private void transactionQueryParamSetter(Object query, LocalDateTime start, LocalDateTime end, TransactionReq transactionReq) {
 
 		if (StringUtils.isNoneBlank(transactionReq.getMobile())) {
 			((Query) query).setParameter("mobile", transactionReq.getMobile());

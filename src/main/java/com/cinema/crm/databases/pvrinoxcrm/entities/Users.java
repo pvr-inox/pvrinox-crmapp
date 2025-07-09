@@ -33,7 +33,8 @@ public class Users {
 	private String userFirstName;
 	private String userLastName;
 	private String email;
-	private Integer mobile;
+	private String mobile;
+	private String password;
 	private String userRole;
 	private Boolean status;
 	@CreationTimestamp @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
