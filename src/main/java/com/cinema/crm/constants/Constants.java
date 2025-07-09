@@ -34,5 +34,9 @@ public class Constants {
 		public static final String ALREADY_REQUESTED_NODAL_OFFICER = "A refund has already been sent to nodal officer for this order with this booking id.";
 		public static final String ALREADY_PROCESSED = "A refund has already been processed for this order with this unique booking id.";
 		public static final String REFUND_REQUEST_RAISED = "Refund request was raised for this transaction.";
+		public static final String USER_ALREADY_EXIST = "The user is already exist.";
+		public static final String USER_REGISTERED_SUCCESSFULLY = "User registration successful.";
+		public static final String USER_REGISTRATION_FAILED = "Failed to register.";
+		public static final String FAILED_TO_LOGGED_IN = "Failed to login.";
 	}
 }

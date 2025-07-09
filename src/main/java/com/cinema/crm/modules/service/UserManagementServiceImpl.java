@@ -97,7 +97,7 @@ public class UserManagementServiceImpl implements UserManagementService{
 			if (request.isUpdate()) {
 				Roles roles = roleRepository.findByRoleName(request.getRoleName());
 				if(request.status == false) {
-				boolean userExist =	userRepository.existsByUserRoleAndStatus(request.getRoleName(), true);
+				boolean userExist =	userRepository.existsByRoleAndStatus(request.getRoleName(), true);
 					if(userExist) {
 						returnObj = WSReturnObj.builder().msg("error").output("This Role Is Assigned To Active User.").responseCode(204).result("error").build();
 						return ResponseEntity.ok(returnObj);
@@ -146,9 +146,8 @@ public class UserManagementServiceImpl implements UserManagementService{
 				Users users = userRepository.findByUserId(request.getUserId());
 				users.setEmail(request.getEmail());
 				users.setMobile(request.getMobile());
-				users.setUserFirstName(request.getUserFirstName());
-				users.setUserLastName(request.getUserLastName());
-				users.setUserRole(request.getUserRole());
+				users.setName(request.getName());
+				users.setRole(request.getUserRole());
 				users.setStatus(request.isStatus());
 				userRepository.save(users);
 				returnObj = WSReturnObj.builder().msg("success").output("User Updated Successfully.").responseCode(204).result("success").build();
@@ -158,7 +157,7 @@ public class UserManagementServiceImpl implements UserManagementService{
 				return ResponseEntity.ok(returnObj);
 			}
 		}else {
-			Users users = Users.builder().userFirstName(request.getUserFirstName()).userLastName(request.getUserLastName()).email(request.getEmail()).mobile(request.getMobile()).userRole(request.getUserRole()).status(request.isStatus()).build();
+			Users users = Users.builder().name(request.getName()).email(request.getEmail()).mobile(request.getMobile()).role(request.getUserRole()).status(request.isStatus()).build();
 			userRepository.save(users);
 			returnObj = WSReturnObj.builder().msg("success").output("User Created Successfully.").responseCode(200).result("sucess").build();
 			return ResponseEntity.ok(returnObj);

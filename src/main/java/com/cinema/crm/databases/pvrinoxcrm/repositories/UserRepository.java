@@ -10,13 +10,15 @@ public interface UserRepository extends JpaRepository<Users, Integer>{
 	
 	Boolean existsByUserId(Integer id);
 	
-	Boolean existsByEmailOrMobile(String email, Integer mobile);
+	Boolean existsByEmailOrMobile(String email, String mobile);
 	
-	Boolean existsByUserRoleAndStatus(String role,boolean status);
+	Boolean existsByRoleAndStatus(String role,boolean status);
 	
 	Users findByUserId(Integer id);
 	
 	Page<Users> findAll(Pageable pageable);
+
+	Users findByEmail(String email);
 
 
 }
