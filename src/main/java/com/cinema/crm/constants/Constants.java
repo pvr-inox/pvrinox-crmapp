@@ -12,6 +12,9 @@ public class Constants {
 	public static final String CANCEL_COMPLETE = "CANCEL_COMPLETE";
 	public static final String CRM_ROLLEDBACK = "CRM_ROLLEDBACK";
 	public static final String CANCEL = "CANCEL";
+	public static final String REDEEMED = "REDEEMED";
+	public static final String APPROVED = "APPROVED";
+	public static final String REJECTED = "REJECTED";
 
 
 	public static class RespCode {
@@ -44,8 +47,35 @@ public class Constants {
 		public static final String USER_REGISTERED_SUCCESSFULLY = "User registration successful.";
 		public static final String USER_REGISTRATION_FAILED = "Failed to register.";
 		public static final String FAILED_TO_LOGGED_IN = "Failed to login.";
+		public static final String REFUND_REQUEST_ERROR = "Failed to initiate refund.";
+		public static final String REFUND_REQUEST_REJECTED = "Refund request rejected.";
+	}
+	
+	public static class ShowBizTransType {
+		public static final String Normal = "Normal";
+		public static final String InCinemaFB = "InCinemaFB";
+		public static final String OnlyFB = "OnlyFB";
+		public static final String IssueVoucher = "IssueVoucher";
 	}
 
-
-
+	public static class Foodtype {
+		public static final String NORMAL = "NORMAL";
+		public static final String ONSEAT = "ONSEAT";
+		public static final String ADDFOOD = "ADDFOOD";
+		public static final String ONLYFOOD = "ONLYFOOD";
+	}
+	
+	public static class TransType {
+    	public static final String BOOKING = "BOOKING";
+    	public static final String BOOKED = "BOOKED";
+    	public static final String FOOD = "FOOD";
+    }
+	
+	 public static class ORDER_TYPE {
+	        public static final String booking = "BOOKING";
+	        public static final String food = "FOOD";
+	        public static final String giftcard = "GIFTCARD";
+	        public static final String passport = "PASSPORT";
+	        public static final String show = "SHOWBOOK";
+		}
 }

@@ -1,17 +1,21 @@
 package com.cinema.crm.modules.service;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.cinema.crm.databases.pvrinox.entities.OrderBooking;
+import com.cinema.crm.databases.pvrinox.entities.Transactions;
 import com.cinema.crm.databases.pvrinox.repositories.OrderBookingRepository;
 import com.cinema.crm.databases.pvrinox.repositories.TransactionsRepository;
+import com.cinema.crm.databases.pvrinoxcrm.entities.RefundDetails;
 import com.cinema.crm.databases.pvrinoxcrm.repositories.RefundDetailsRepository;
 import com.cinema.crm.modules.model.TransactionReq;
 import com.cinema.crm.modules.model.TransactionResp;
@@ -41,92 +45,102 @@ public class TransactionServiceImpl implements TransactionService {
 	public ResponseEntity<Object> getAllTransactions(TransactionReq transactionReq) {
 		WSReturnObj<Object> returnObj = new WSReturnObj<>();
 		try {
-
-			SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
-
-			Date start = StringUtils.isNoneEmpty(transactionReq.getFromDate())
-					? formater.parse(transactionReq.getFromDate())
-					: null;
-			Date end = StringUtils.isNoneEmpty(transactionReq.getUptoDate())
-					? formater.parse(transactionReq.getUptoDate())
-					: null;
-
-			String stringQuery = buildTransactionData(transactionReq);
-			TypedQuery<OrderBooking> query = entityManager.createQuery(stringQuery, OrderBooking.class);
-			transactionQueryParamSetter(query, start, end, transactionReq);
-
-			List<OrderBooking> orderBookingList = query.getResultList();
-			List<TransactionResp> responseList = orderBookingList.stream().map(this::convertToTransactionResp).toList();
-
-			returnObj.setMsg("success");
-			returnObj.setOutput(responseList);
-			returnObj.setResponseCode(200);
-			returnObj.setResult("sucess");
-			return ResponseEntity.ok(returnObj);
+			
+			if(StringUtils.isEmpty(transactionReq.getMobile()) && StringUtils.isEmpty(transactionReq.getBookingId())) {
+				returnObj.setMsg("Mobile number and Booking id both can not be empty.");
+				returnObj.setOutput(null);
+				returnObj.setResponseCode(201);
+				returnObj.setResult("error");
+				return ResponseEntity.ok(returnObj);
+			}
+			List<TransactionResp> responseList = new ArrayList<>();
+			if(transactionReq.requested) {
+				List<RefundDetails> refundList = refundDetailsRepository.findAll();
+				returnObj.setMsg(refundList.isEmpty() ? "No Data Found" : "success");
+				returnObj.setOutput(refundList);
+				returnObj.setResponseCode(200);
+				returnObj.setResult("sucess");
+				return ResponseEntity.ok(returnObj);
+			}else {
+				String stringQuery = buildTransactionData(transactionReq);
+				TypedQuery<Transactions> query = entityManager.createQuery(stringQuery, Transactions.class);
+				transactionQueryParamSetter(query, transactionReq);
+				List<Transactions> orderBookingList = query.getResultList();
+				responseList = orderBookingList.stream().map(this::convertToTransactionResp).toList();
+					returnObj.setMsg(responseList.isEmpty() ? "No Data Found" : "success");
+					returnObj.setOutput(responseList);
+					returnObj.setResponseCode(200);
+					returnObj.setResult("sucess");
+					return ResponseEntity.ok(returnObj);
+			}
 
 		} catch (Exception e) {
+			log.error("Exception occured in getAllTransactions {} : ",e);
 			returnObj.setMsg("error");
 			returnObj.setOutput(null);
 			returnObj.setResponseCode(500);
 			returnObj.setResult("error");
 			return ResponseEntity.ok(returnObj);
-
 		}
 
 	}
 
-	private TransactionResp convertToTransactionResp(OrderBooking order) {
+	private TransactionResp convertToTransactionResp(Transactions order) {
+		Optional<RefundDetails> data = refundDetailsRepository.findByBookingId(order.getId());
+		RefundDetails refundDetails = new RefundDetails();
+		if(data.isPresent()) {
+			refundDetails = data.get();
+		}
 		TransactionResp resp = new TransactionResp();
-		resp.bookingId = order.getBookingId();
-		resp.eventName = order.getOrderFilmCinema().getFilmName();
-		resp.orderId = order.getOrderIdEx();
+		resp.bookingId = order.getId();
+		resp.eventName = order.getFilmName();
+		resp.orderId = order.getBookingId();
 		resp.mobile = order.getMobile();
-		resp.seatNumber = order.getOrderTicket().getSeats();
+		resp.seatNumber = order.getSeats();
 		resp.paymodes = order.getPaymode();
-		resp.vouchers = order.getOrderTicket().getCvpVouchers();
+		resp.vouchers = order.getCvpVouchers();
 		resp.voucherStatus = "";
-		resp.cancelReasons = "";
-		resp.cancelDate = order.getModifiedAt().toGMTString();
+		resp.cancelReasons = refundDetails.getRemarks();
+		resp.cancelDate = order.getCreatedAt().toString();
 		resp.refunded = false;
-		resp.totalAmount = order.getTotalPrice();
+		resp.totalAmount = order.getTotalTicketPrice() + order.getFbTotalPrice();
 		resp.approval = "";
-		resp.refundStatus = "";
+		resp.refundStatus = refundDetails.getRefundStatus();
 		resp.utrNumber = "";
 		resp.customerName = order.getName();
-
 		return resp;
 	}
 
 	private String buildTransactionData(TransactionReq transactionReq) {
 
-		String baseQuery = "SELECT o FROM OrderBooking o WHERE bookingStatus = 'BOOKED' ";
+		String baseQuery = "SELECT o FROM Transactions o WHERE ";
 		StringBuilder queryBuilder = new StringBuilder(baseQuery);
 
 		if (StringUtils.isNotBlank(transactionReq.getMobile())) {
-			queryBuilder.append("AND o.mobile = :mobile ");
+			queryBuilder.append(" o.mobile = :mobile order by bookingTime desc limit 7");
 		}
 
 		if (StringUtils.isNotBlank(transactionReq.getBookingId())) {
-			queryBuilder.append("AND o.bookingId = :bookingId ");
+			queryBuilder.append(" o.bookingId = :bookingId order by bookingTime desc limit 7");
 		}
 
-		if (StringUtils.isNotBlank(transactionReq.getCinema())) {
-			queryBuilder.append("AND o.theaterId = :theaterId ");
-		}
-
-		if (StringUtils.isNotBlank(transactionReq.getOrderId())) {
-			queryBuilder.append("AND o.id = :id ");
-		}
-
-		if (StringUtils.isNotBlank(transactionReq.getFromDate())
-				&& StringUtils.isNotBlank(transactionReq.getUptoDate())) {
-			queryBuilder.append("AND o.bookingTime BETWEEN :startDate AND :endDate");
-		}
+//		if (StringUtils.isNotBlank(transactionReq.getCinema())) {
+//			queryBuilder.append("AND o.theaterId = :theaterId ");
+//		}
+//
+//		if (StringUtils.isNotBlank(transactionReq.getOrderId())) {
+//			queryBuilder.append("AND o.id = :id ");
+//		}
+//
+//		if (StringUtils.isNotBlank(transactionReq.getFromDate())
+//				&& StringUtils.isNotBlank(transactionReq.getUptoDate())) {
+//			queryBuilder.append("AND o.bookingTime BETWEEN :startDate AND :endDate");
+//		}
 
 		return queryBuilder.toString();
 	}
 
-	private void transactionQueryParamSetter(Object query, Date start, Date end, TransactionReq transactionReq) {
+	private void transactionQueryParamSetter(Object query, TransactionReq transactionReq) {
 
 		if (StringUtils.isNoneBlank(transactionReq.getMobile())) {
 			((Query) query).setParameter("mobile", transactionReq.getMobile());
@@ -134,20 +148,20 @@ public class TransactionServiceImpl implements TransactionService {
 		if (StringUtils.isNoneBlank(transactionReq.getBookingId())) {
 			((Query) query).setParameter("bookingId", transactionReq.getBookingId());
 		}
-		if (StringUtils.isNoneBlank(transactionReq.getCinema())) {
-			((Query) query).setParameter("theaterId", transactionReq.getCinema());
-		}
-		if (StringUtils.isNoneBlank(transactionReq.getOrderId())) {
-			((Query) query).setParameter("id", transactionReq.getOrderId());
-		}
-
-		if (Objects.nonNull(start)) {
-			((Query) query).setParameter("startDate", start);
-		}
-
-		if (Objects.nonNull(end)) {
-			((Query) query).setParameter("endDate", end);
-		}
+//		if (StringUtils.isNoneBlank(transactionReq.getCinema())) {
+//			((Query) query).setParameter("theaterId", transactionReq.getCinema());
+//		}
+//		if (StringUtils.isNoneBlank(transactionReq.getOrderId())) {
+//			((Query) query).setParameter("id", transactionReq.getOrderId());
+//		}
+//
+//		if (Objects.nonNull(start)) {
+//			((Query) query).setParameter("startDate", start);
+//		}
+//
+//		if (Objects.nonNull(end)) {
+//			((Query) query).setParameter("endDate", end);
+//		}
 	}
 
 

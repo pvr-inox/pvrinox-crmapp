@@ -238,4 +238,32 @@ public class RefundUtility {
 		}
 		return gyftrCancelResponse;
 	}
+	
+	public Map<String, Object> cancelBooking(String bookingId) {
+		try {
+			Map<String, String> request = new LinkedHashMap<String, String>();
+			request.put("orderId", bookingId);
+			Map<String, String> header = new LinkedHashMap<String, String>();
+			header.put("Content-Type", "application/json");
+			header.put("chain", "PVR");
+			header.put("city", "Mumbai-All");
+			header.put("country", "INDIA");
+			header.put("platform", "MSITE");
+			header.put("appVersion", "1.0");
+			header.put("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMzcwIiwiaWF0IjoxNzUxMjYzMzA0LCJleHAiOjE3NTE0NzkzMDR9.jiOkfZyiQ5Ggszixl0e_hlXmxpQxp86eljbp-vCETIo");
+			String response = httpUtil.invokePost("https://pvrinox-maindev.pvrcinemas.com/" + "api/v1/booking/ticketing/cancelbooking",
+					header, (new Gson()).toJson(request), "application/json", bookingId,
+					refundPros.getTimeout());
+			log.debug("juspay order refund response for booking id : {} : {}", bookingId, response);
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			Map<String, Object> responseMap = mapper.readValue(response, Map.class);
+			return responseMap;
+		} catch (Exception exception) {
+			log.error("exception occured in voucha consume for booking id : {} : {}", bookingId,
+					exception.getMessage());
+		}
+
+		return null;
+	}
 }

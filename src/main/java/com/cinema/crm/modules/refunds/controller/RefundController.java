@@ -3,6 +3,7 @@ package com.cinema.crm.modules.refunds.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import com.cinema.crm.modules.model.CancelSessionRequest;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,4 +31,14 @@ public class RefundController {
 	public ResponseEntity<Object> aproval(@RequestBody SingleRefundRequest singleRefundReq, HttpServletRequest servletRequest){
 		return refundService.aproval(singleRefundReq);
 	}
+	
+	@PostMapping("/cancel")
+	public ResponseEntity<Object> cancelAllBySessionRequest(@RequestBody CancelSessionRequest request) {
+	    return refundService.cancelTransactionsBySession(request);
+	}
+
+//	@PostMapping("cancel")
+//    public ResponseEntity<?> cancelTrans(@RequestParam(name = "id") String id) {
+//        return refundService.cancelTrans(id);
+//    }
 }

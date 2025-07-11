@@ -23,5 +23,6 @@ public class SingleRefundRequest {
     public String refund;
     public String paymentGateway;
     public String remarks;
+    public String action;
 
 }

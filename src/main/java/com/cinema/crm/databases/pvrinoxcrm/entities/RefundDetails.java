@@ -1,5 +1,7 @@
 package com.cinema.crm.databases.pvrinoxcrm.entities;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -37,5 +39,23 @@ public class RefundDetails {
     @Column(name = "refund") private String refund;
     @Column(name = "payment_gateway") private String paymentGateway;
     @Column(name = "remarks") private String remarks;
+    
+    @Column(name = "seat_no")
+    private String seatNo;
+    @Column(name = "payment_mode")
+    private String paymentMode;
+    @Column(name = "voucher_code")
+    private String voucherCode;
+    @Column(name = "voucher_status")
+    private String voucherStatus;
+    @Column(name = "submitted_date")
+    private LocalDateTime submittedDate;
+    @Column(name = "is_refunded")
+    private Boolean isRefunded;
+    @Column(name = "nodal_officer_approval")
+    private String nodalOfficerApproval;
+    @Column(name = "utr_number")
+    private String utrNumber;
+
 
 }

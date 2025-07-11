@@ -149,6 +149,7 @@ public class UserManagementServiceImpl implements UserManagementService{
 				users.setName(request.getName());
 				users.setRole(request.getUserRole());
 				users.setStatus(request.isStatus());
+				users.setPassword(request.getPassword());
 				userRepository.save(users);
 				returnObj = WSReturnObj.builder().msg("success").output("User Updated Successfully.").responseCode(204).result("success").build();
 				return ResponseEntity.ok(returnObj);

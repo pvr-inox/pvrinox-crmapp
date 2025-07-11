@@ -13,6 +13,8 @@ import com.cinema.crm.modules.model.ReqRole;
 import com.cinema.crm.modules.model.ReqUser;
 import com.cinema.crm.modules.service.UserManagementService;
 
+import jakarta.validation.Valid;
+
 /**
  * This @class is used to manage user, module and role.
  * @author sagar.gaikwad
@@ -49,7 +51,7 @@ public class UserController {
 	}
 	
 	@PostMapping(value = "createUser")
-	public ResponseEntity<Object> createUser(@RequestBody ReqUser request){
+	public ResponseEntity<Object> createUser(@Valid @RequestBody ReqUser request){
 		return userManagementService.createUser(request);
 	}
 	
