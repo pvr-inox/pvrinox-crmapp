@@ -11,8 +11,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.cinema.crm.login.jwt.JwtService;
-import com.cinema.crm.login.service.MyUserDetailService;
+import com.cinema.crm.login.token.TokenService;
+import com.cinema.crm.login.service.ApplicationUserDetailService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,10 +29,10 @@ import lombok.extern.log4j.Log4j2;
  */
 @Log4j2
 @Component
-public class JwtFilter extends OncePerRequestFilter {
+public class TokenFilter extends OncePerRequestFilter {
 
 	@Autowired
-	private JwtService jwtService;
+	private TokenService tokenService;
 	
 	@Autowired
 	private ApplicationContext context;
@@ -50,14 +50,14 @@ public class JwtFilter extends OncePerRequestFilter {
 		
 		if(authHeader != null && authHeader.startsWith("Bearer ")) {
 			token = authHeader.substring(7);
-			username = jwtService.extractUsername(token);
+			username = tokenService.extractUsername(token);
 		}
 		
 		if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			UserDetails userDetails = context.getBean(MyUserDetailService.class).loadUserByUsername(username);
+			UserDetails userDetails = context.getBean(ApplicationUserDetailService.class).loadUserByUsername(username);
 			log.debug("userDetails: {}" , userDetails.toString());
 			
-			if(jwtService.validateToken(token, userDetails)) {
+			if(tokenService.validateToken(token, userDetails)) {
 				UsernamePasswordAuthenticationToken authenticationToken =
 						new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 				authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

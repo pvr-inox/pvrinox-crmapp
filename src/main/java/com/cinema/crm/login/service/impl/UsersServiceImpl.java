@@ -14,7 +14,7 @@ import com.cinema.crm.constants.Constants.Result;
 import com.cinema.crm.constants.GenericResponse;
 import com.cinema.crm.databases.pvrinoxcrm.entities.Users;
 import com.cinema.crm.databases.pvrinoxcrm.repositories.UserRepository;
-import com.cinema.crm.login.jwt.JwtService;
+import com.cinema.crm.login.token.TokenService;
 import com.cinema.crm.login.service.UsersService;
 
 @Service
@@ -29,7 +29,7 @@ public class UsersServiceImpl implements UsersService{
 	private AuthenticationManager authenticationManager;
 	
 	@Autowired
-	private JwtService jwtService;
+	private TokenService tokenService;
 	
 	@Override
 	public GenericResponse register(Users users) {
@@ -50,7 +50,7 @@ public class UsersServiceImpl implements UsersService{
 		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 		
 		if(authentication.isAuthenticated()) {
-			return jwtService.generateToken(username);
+			return tokenService.generateToken(username);
 		}
 		return Constants.Message.FAILED_TO_LOGGED_IN;
 	}

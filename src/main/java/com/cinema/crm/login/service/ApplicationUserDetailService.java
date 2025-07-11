@@ -16,7 +16,7 @@ import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Service
-public class MyUserDetailService  implements UserDetailsService{
+public class ApplicationUserDetailService implements UserDetailsService{
 
 	@Autowired
 	private UserRepository userRepository;

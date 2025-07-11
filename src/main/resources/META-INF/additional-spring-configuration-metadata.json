@@ -188,5 +188,10 @@
     "name": "refund.gyftr-shopcode",
     "type": "java.lang.String",
     "description": "A description for 'refund.gyftr-shopcode'"
+  },
+  {
+    "name": "spring.datasource.inox.jdbc-url",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.datasource.inox.jdbc-url'"
   }
 ]}

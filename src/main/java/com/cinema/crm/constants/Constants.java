@@ -13,6 +13,7 @@ public class Constants {
 	public static final String CRM_ROLLEDBACK = "CRM_ROLLEDBACK";
 	public static final String CANCEL = "CANCEL";
 
+
 	public static class RespCode {
 		public static final String SUCCESS = "00";
 		public static final String FAILED = "100";
@@ -26,7 +27,12 @@ public class Constants {
 		public static final String ERROR = "error";
 		public static final String PENDING = "pending";
 	}
-	
+
+	public static class UserRoles {
+		public static final String SUPER_ADMIN = "ROLE_SUPER_ADMIN";
+		public static final String EXECUTIVE = "ROLE_CRM_EXECUTIVE";
+		public static final String OFFICER = "ROLE_NODAL_OFFICER";
+	}
 	public static class Message {
 		public static final String SUCCESS = "success";
 		public static final String BOOKING_NOT_FOUNDED = "Refund cannot be initiated as no booking was found with the associated booking ID.";
@@ -39,4 +45,7 @@ public class Constants {
 		public static final String USER_REGISTRATION_FAILED = "Failed to register.";
 		public static final String FAILED_TO_LOGGED_IN = "Failed to login.";
 	}
+
+
+
 }
