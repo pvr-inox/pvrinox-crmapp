@@ -14,8 +14,9 @@ import com.cinema.crm.constants.Constants.Result;
 import com.cinema.crm.constants.GenericResponse;
 import com.cinema.crm.databases.pvrinoxcrm.entities.Users;
 import com.cinema.crm.databases.pvrinoxcrm.repositories.UserRepository;
-import com.cinema.crm.login.token.TokenService;
+import com.cinema.crm.login.model.LoggedInResponse;
 import com.cinema.crm.login.service.UsersService;
+import com.cinema.crm.login.token.TokenService;
 
 @Service
 public class UsersServiceImpl implements UsersService{
@@ -46,13 +47,16 @@ public class UsersServiceImpl implements UsersService{
 	}
 
 	@Override
-	public String verify(String username, String password) {
+	public LoggedInResponse verify(String username, String password) {
 		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 		
 		if(authentication.isAuthenticated()) {
-			return tokenService.generateToken(username);
+			return tokenService.generateToken(userRepository.findByEmail(username));
 		}
-		return Constants.Message.FAILED_TO_LOGGED_IN;
+		
+		return LoggedInResponse.builder().result(Result.FAILED)
+				.responseCode(Constants.RespCode.FAILED)
+				.message(Constants.Message.FAILED_TO_LOGGED_IN).build();
 	}
 
 }

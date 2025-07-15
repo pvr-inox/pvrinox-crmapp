@@ -9,8 +9,15 @@ import java.util.function.Function;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import com.cinema.crm.constants.Constants;
+import com.cinema.crm.constants.Constants.Result;
+import com.cinema.crm.databases.pvrinoxcrm.entities.Users;
+import com.cinema.crm.databases.pvrinoxcrm.repositories.RoleRepository;
+import com.cinema.crm.login.model.LoggedInResponse;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -26,8 +33,10 @@ import jakarta.annotation.PostConstruct;
 public class TokenService {
 	
 
-	private int exparyTime = 10;
+	private int exparyTime = 30;
 	private SecretKey secretKey ;
+	@Autowired private RoleRepository roleRepository;
+	
 	
 	/**
      * Initialize the secret key after the bean is created.
@@ -41,18 +50,26 @@ public class TokenService {
         }
     }
 
-	public String generateToken(String username) {
+	public LoggedInResponse generateToken(Users user) {
 		Map<String, Object> claims = new HashMap<>();
 
-		return Jwts.builder()
-				.claims()
-				.add(claims)
-				.subject(username)
-				.issuedAt(new Date(System.currentTimeMillis()))
-				.expiration(new Date(System.currentTimeMillis() + exparyTime * 60 * 1000))
-				.and()
-				.signWith(secretKey)
-				.compact();
+		Date now = new Date(System.currentTimeMillis());
+		Date exp = new Date(System.currentTimeMillis() + exparyTime * 60 * 1000);
+		
+				String token = Jwts.builder().claims().add(claims).subject(user.getEmail()).issuedAt(now).expiration(exp).and().signWith(secretKey).compact();
+				
+				return LoggedInResponse.builder().result(Result.SUCCESS)
+						.responseCode(Constants.RespCode.SUCCESS)
+						.message(Constants.Message.LOGIN_SUCCESSFULLY)
+						.username(user.getName())
+						.email(user.getEmail())
+						.mobile(user.getMobile())
+						.profile(user.getRole().substring(5))
+						.modules(roleRepository.findByRoleName(user.getRole().substring(5)).getModules())
+						.token(token)
+						.issuedAt(now)
+						.expiration(exp)
+						.build();
 	}
 
 	/**

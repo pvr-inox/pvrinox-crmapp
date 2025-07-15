@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.cinema.crm</groupId>
 	<artifactId>pvrinox-crmapp</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>pvrinox-crmapp</name>
 	<description>PVR-INOX Cinemas CRM</description>
 	<url/>

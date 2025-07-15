@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cinema.crm.constants.GenericResponse;
 import com.cinema.crm.databases.pvrinoxcrm.entities.Users;
+import com.cinema.crm.login.model.LoggedInResponse;
 import com.cinema.crm.login.service.UsersService;
 
 @RestController
@@ -26,9 +27,8 @@ public class LoginApi {
 	}
 	
 	@PostMapping("/login")
-	public String login(@RequestHeader("username") String username, @RequestHeader("password") String password) {
-		
-		return usersService.verify(username,password);
+	public ResponseEntity<LoggedInResponse> login(@RequestHeader("username") String username, @RequestHeader("password") String password) {
+		return ResponseEntity.ok(usersService.verify(username,password));
 	}
 	
 }

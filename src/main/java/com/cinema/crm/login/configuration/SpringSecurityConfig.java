@@ -116,17 +116,20 @@ public class SpringSecurityConfig {
 	private List<String> officer(){
 		List<String> permittedApis = new LinkedList<>();
 		permittedApis.add("/api/v1/refund/approve-refund");
-		permittedApis.add("/api/v1/show/save");
 		return permittedApis;
 		
 	}
 	private List<String> defaultPermissions(){
 		 return List.of(
+				 "/",
+				 "/actuator/health",
+				 "/public/**",
 			        "/api/auth/login",
 			        "/api/auth/refresh",
 			        "/swagger-ui.html",
 			        "/swagger-ui/**",
-			        "/v3/api-docs/**"
+			        "/v3/api-docs/**",
+			        "/api/v1/show/save"
 			    );
 	}
 
@@ -135,6 +138,10 @@ public class SpringSecurityConfig {
 		List<String> permittedApis = new LinkedList<>();
 		permittedApis.add("/api/auth/register");
 		permittedApis.add("/api/v1/user/**");
+		permittedApis.add("/api/v1/refund/approve-refund");
+		permittedApis.add("/api/v1/show/save");
+		permittedApis.add("/api/v1/refund/initiate-refund");
+		permittedApis.add("/api/v1/manage/**");
 		return  permittedApis;
 	}
 }

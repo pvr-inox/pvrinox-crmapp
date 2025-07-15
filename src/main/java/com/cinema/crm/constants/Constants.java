@@ -49,6 +49,7 @@ public class Constants {
 		public static final String FAILED_TO_LOGGED_IN = "Failed to login.";
 		public static final String REFUND_REQUEST_ERROR = "Failed to initiate refund.";
 		public static final String REFUND_REQUEST_REJECTED = "Refund request rejected.";
+		public static final String LOGIN_SUCCESSFULLY = "Logged in successful.";
 	}
 	
 	public static class ShowBizTransType {
