@@ -399,82 +399,82 @@ public class RefundServiceImpl implements RefundService {
                         return null;
                     }
                 } 
-        	}
-        	
-        	ReqRefundTrans req = new ReqRefundTrans();
-        	req.setCcode(request.getTheaterId());
-        	req.setPlatform(request.getPlatform());
-        	req.setChain(request.getChain());
-        	req.setBookId(String.valueOf(request.getOrderId()));
-        	req.setCardNumber("1234567890000000");
-        	req.setCustomerName(request.getName());
-        	DecimalFormat decimalFormat = new DecimalFormat("#.00");
-        	req.setReceiptNo(request.getBookingId());
-        	req.setRemarks("Crm Cancellation");
-        	LocalDateTime showTime = request.getShowTime();
-        	Date showTimeDate = Date.from(showTime.atZone(ZoneId.systemDefault()).toInstant());
-        	DateFormat sDdate = new SimpleDateFormat("yyyy-MM-dd");
-        	DateFormat stdate = new SimpleDateFormat("HH:mm:ss");
-        	req.setShowDate(sDdate.format(showTimeDate));
-        	req.setShowTime(stdate.format(showTimeDate));
-        	req.setScreenId(request.getScreenId());
-        	req.setNoOfTicket(request.getNumOfSeats());
-        	if (request.getNumOfSeats() != 0) {
-        	    req.setRate(decimalFormat.format((double) request.getTicketPrice() / 100));
-        	    req.setValue(decimalFormat.format((double) request.getTotalTicketPrice() / 100));
-        	} else {
-        	    req.setRate("0.00");
-        	    req.setValue("0.00");
-        	}
-        	req.setFbNoOfItems(request.getFbCount());
-        	if (request.getFbCount() != 0) {
-        	    req.setFbValue(decimalFormat.format((double) request.getFbTotalPrice() / 100));
-        	} else {
-        	    req.setFbValue("0.00");
-        	}
-        	
-        	
-			if (request.getGyfterused()) {
-				req.setPgId("14");
-			} else if (request.getGiftcardused()) {
-				req.setPgId("13");
-			} else if (request.getPaymode().equalsIgnoreCase("INSTAPAY")) {
-				req.setPgId("6");
-			} else if (request.getPgType().equalsIgnoreCase("WALLET")) {
-				if (request.getPaymode().equalsIgnoreCase("PAYTM")) {
-					req.setPgId("5");
-				} else if (request.getPaymode().equalsIgnoreCase("MOBIKWIK")) {
-					req.setPgId("11");
-				} else if (request.getPaymode().equalsIgnoreCase("AMAZONPAYLATER")
-						|| request.getPaymode().equalsIgnoreCase("AMAZONPAY")) {
-					req.setPgId("3");
-				}
-			} else{
-				req.setPgId("4");
-			}
-        	
-			
-        	if (request.getBookType().equalsIgnoreCase(Constants.ORDER_TYPE.booking.toString())) {
-        	    req.setTransType("Normal");
-        	} else if (request.getBookType().equalsIgnoreCase(Constants.ORDER_TYPE.food.toString())) {
-        	    req.setTransType(Constants.ShowBizTransType.OnlyFB.toString());
-        	}
-        	    
-        	  String cancelBuyResponse = showbizUtil.cancelBuy(cinema, pos, req);
-				if (StringUtils.hasText(cancelBuyResponse)) {
-					OrderCancelData orderCancelData = showbizUtil.getShowBizCancelBuyData(cancelBuyResponse, cinema,
-							req);
-					//log.info("REFUND DATA::" + new Gson().toJson(orderCancelData));
-					if (orderCancelData.isSuccess()) {
-						log.info("showbiz cancelBuy success:: {}" , new Gson().toJson(orderCancelData));
-						return orderCancelData;
-					} else {
-						// error
-						log.error("showbiz cancelBuy error message:: {}" , new Gson().toJson(orderCancelData.getErrorMsg()));
-						log.error("showbiz cancelBuy error:: {}" , new Gson().toJson(orderCancelData));
-						return orderCancelData;
-					}
-				}
+            }
+            
+            ReqRefundTrans req = new ReqRefundTrans();
+            req.setCcode(request.getTheaterId());
+            req.setPlatform(request.getPlatform());
+            req.setChain(request.getChain());
+            req.setBookId(String.valueOf(request.getOrderId()));
+            req.setCardNumber("1234567890000000");
+            req.setCustomerName(request.getName());
+            DecimalFormat decimalFormat = new DecimalFormat("#.00");
+            req.setReceiptNo(request.getBookingId());
+            req.setRemarks("Crm Cancellation");
+            LocalDateTime showTime = request.getShowTime();
+            Date showTimeDate = Date.from(showTime.atZone(ZoneId.systemDefault()).toInstant());
+            DateFormat sDdate = new SimpleDateFormat("yyyy-MM-dd");
+            DateFormat stdate = new SimpleDateFormat("HH:mm:ss");
+            req.setShowDate(sDdate.format(showTimeDate));
+            req.setShowTime(stdate.format(showTimeDate));
+            req.setScreenId(request.getScreenId());
+            req.setNoOfTicket(request.getNumOfSeats());
+            if (request.getNumOfSeats() != 0) {
+                req.setRate(decimalFormat.format((double) request.getTicketPrice() / 100));
+                req.setValue(decimalFormat.format((double) request.getTotalTicketPrice() / 100));
+            } else {
+                req.setRate("0.00");
+                req.setValue("0.00");
+            }
+            req.setFbNoOfItems(request.getFbCount());
+            if (request.getFbCount() != 0) {
+                req.setFbValue(decimalFormat.format((double) request.getFbTotalPrice() / 100));
+            } else {
+                req.setFbValue("0.00");
+            }
+            
+            
+            if (request.getGyfterused()) {
+                req.setPgId("14");
+            } else if (request.getGiftcardused()) {
+                req.setPgId("13");
+            } else if (request.getPaymode().equalsIgnoreCase("INSTAPAY")) {
+                req.setPgId("6");
+            } else if (request.getPgType().equalsIgnoreCase("WALLET")) {
+                if (request.getPaymode().equalsIgnoreCase("PAYTM")) {
+                    req.setPgId("5");
+                } else if (request.getPaymode().equalsIgnoreCase("MOBIKWIK")) {
+                    req.setPgId("11");
+                } else if (request.getPaymode().equalsIgnoreCase("AMAZONPAYLATER")
+                        || request.getPaymode().equalsIgnoreCase("AMAZONPAY")) {
+                    req.setPgId("3");
+                }
+            } else{
+                req.setPgId("4");
+            }
+            
+            
+            if (request.getBookType().equalsIgnoreCase(Constants.ORDER_TYPE.booking.toString())) {
+                req.setTransType("Normal");
+            } else if (request.getBookType().equalsIgnoreCase(Constants.ORDER_TYPE.food.toString())) {
+                req.setTransType(Constants.ShowBizTransType.OnlyFB.toString());
+            }
+                
+              String cancelBuyResponse = showbizUtil.cancelBuy(cinema, pos, req);
+                if (StringUtils.hasText(cancelBuyResponse)) {
+                    OrderCancelData orderCancelData = showbizUtil.getShowBizCancelBuyData(cancelBuyResponse, cinema,
+                            req);
+                    //log.info("REFUND DATA::" + new Gson().toJson(orderCancelData));
+                    if (orderCancelData.isSuccess()) {
+                        log.info("showbiz cancelBuy success:: {}" , new Gson().toJson(orderCancelData));
+                        return orderCancelData;
+                    } else {
+                        // error
+                        log.error("showbiz cancelBuy error message:: {}" , new Gson().toJson(orderCancelData.getErrorMsg()));
+                        log.error("showbiz cancelBuy error:: {}" , new Gson().toJson(orderCancelData));
+                        return orderCancelData;
+                    }
+                }
 
         } catch (Exception e) {
             log.error("exception occured in showbiz cancel for booking id : {} :: {}", bookingId ,  e.getMessage());
@@ -664,7 +664,9 @@ public class RefundServiceImpl implements RefundService {
 
             // Giftcard Refund
             if (Boolean.TRUE.equals(txn.getGiftcardused())) {
+				
                 Object giftResp = cancelGiftCard(txn.getId(),txn);
+
                 boolean result = giftResp != null;
                 refunded |= result;
 
