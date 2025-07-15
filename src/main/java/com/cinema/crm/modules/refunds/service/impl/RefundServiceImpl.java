@@ -664,9 +664,8 @@ public class RefundServiceImpl implements RefundService {
 
             // Giftcard Refund
             if (Boolean.TRUE.equals(txn.getGiftcardused())) {
-
+				
                 Object giftResp = cancelGiftCard(txn.getId(),txn);
-
 
                 boolean result = giftResp != null;
                 refunded |= result;
