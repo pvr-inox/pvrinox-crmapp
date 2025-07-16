@@ -2,6 +2,8 @@ package com.cinema.crm.modules.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +20,7 @@ import com.cinema.crm.databases.pvrinoxcrm.repositories.UserRepository;
 import com.cinema.crm.modules.model.ReqModule;
 import com.cinema.crm.modules.model.ReqRole;
 import com.cinema.crm.modules.model.ReqUser;
+import com.cinema.crm.modules.model.ResUser;
 import com.cinema.crm.modules.model.WSReturnObj;
 
 import lombok.extern.log4j.Log4j2;
@@ -182,8 +185,23 @@ public class UserManagementServiceImpl implements UserManagementService{
 		WSReturnObj<Object> returnObj = new WSReturnObj<>();
 		 Pageable pageable = PageRequest.of(page, size);
 		 Page<Users> usersPage = userRepository.findAll(pageable);
-		returnObj = WSReturnObj.builder().msg("success").output(usersPage.getContent()).responseCode(200).result("sucess").build();
+		 List<ResUser> data = usersPage.getContent().stream().map(this::toResUser).collect(Collectors.toList());
+		 returnObj = WSReturnObj.builder().msg("success").output(data).responseCode(200).result("sucess").build();
 		return ResponseEntity.ok(returnObj);
 	}
+	
+	public ResUser toResUser(Users user) {
+	    ResUser res = new ResUser();
+	    res.setUserId(user.getUserId());
+	    res.setName(user.getName());
+	    res.setEmail(user.getEmail());
+	    res.setMobile(user.getMobile());
+	    res.setRole(user.getRole());
+	    res.setStatus(user.getStatus());
+	    res.setCreatedAt(user.getCreatedAt());
+	    res.setModifiedAt(user.getModifiedAt());
+	    return res;
+	}
+
 
 }
