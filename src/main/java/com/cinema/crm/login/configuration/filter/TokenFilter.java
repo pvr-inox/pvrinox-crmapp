@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.cinema.crm.login.token.TokenService;
+
+import io.jsonwebtoken.ExpiredJwtException;
+
 import com.cinema.crm.login.service.ApplicationUserDetailService;
 
 import jakarta.servlet.FilterChain;
@@ -39,7 +42,7 @@ public class TokenFilter extends OncePerRequestFilter {
 	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
+			throws ServletException, IOException, ExpiredJwtException {
 		
 		String authHeader = request.getHeader("Authorization");
 		log.debug("authHeader: {}", authHeader);
@@ -48,23 +51,39 @@ public class TokenFilter extends OncePerRequestFilter {
 		String token = null;
 		String username = null;
 		
-		if(authHeader != null && authHeader.startsWith("Bearer ")) {
+		if (authHeader != null && authHeader.startsWith("Bearer ")) {
 			token = authHeader.substring(7);
-			username = tokenService.extractUsername(token);
+			try {
+				username = tokenService.extractUsername(token);
+
+			} catch (io.jsonwebtoken.ExpiredJwtException e) {
+				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+				response.getWriter().write("Token expired");
+				return;
+
+			} catch (io.jsonwebtoken.security.SignatureException e) {
+				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+				response.getWriter().write("Invalid token signature");
+				return;
+
+			} catch (Exception e) {
+				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+				response.getWriter().write("Invalid token");
+				return;
+			}
 		}
-		
-		if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = context.getBean(ApplicationUserDetailService.class).loadUserByUsername(username);
-			log.debug("userDetails: {}" , userDetails.toString());
-			
-			if(tokenService.validateToken(token, userDetails)) {
-				UsernamePasswordAuthenticationToken authenticationToken =
-						new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+			log.debug("userDetails: {}", userDetails.toString());
+
+			if (tokenService.validateToken(token, userDetails)) {
+				UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+						userDetails, null, userDetails.getAuthorities());
 				authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 			}
 		}
-		
+
 		filterChain.doFilter(request, response);
 	}
 

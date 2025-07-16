@@ -22,6 +22,7 @@ public class Constants {
 		public static final String FAILED = "100";
 		public static final String PENDING = "101";
 		public static final String NO_DATA_FOUND = "102";
+		public static final String INETNAL_SERVER_ERROR = "500";
 	}
 
 	public static class Result {
