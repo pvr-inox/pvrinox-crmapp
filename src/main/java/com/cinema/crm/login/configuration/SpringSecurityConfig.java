@@ -70,6 +70,7 @@ public class SpringSecurityConfig {
 
 		return http
 		.csrf(customizer -> customizer.disable())
+		.cors(Customizer.withDefaults())
 		.authorizeHttpRequests(customizer -> customizer
 				.requestMatchers(defaultPermissions().toArray(String[]::new)).permitAll()
 			    .requestMatchers(userCreator().toArray(String[]::new)).hasAuthority(Constants.UserRoles.SUPER_ADMIN)
