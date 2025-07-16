@@ -10,8 +10,7 @@ public class ReqUser {
 
 	private boolean update;
 	private Integer userId;
-	private String userFirstName;
-	private String userLastName;
+	private String name;
 	private String email;
 	private String mobile;
 	private String userRole;

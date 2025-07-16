@@ -7,6 +7,6 @@ import com.cinema.crm.databases.pvrinox.entities.SBTransactions;
 
 
 @Repository
-public interface SBTransactionRepository extends JpaRepository<SBTransactions, String> {
+public interface SBTransactionRepository extends JpaRepository<SBTransactions, Long> {
 
 }
