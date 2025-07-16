@@ -7,11 +7,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
@@ -66,6 +68,7 @@ import com.cinema.crm.modules.utils.RefundUtility;
 import com.cinema.crm.modules.utils.ShowbizUtil;
 import com.google.gson.Gson;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
@@ -155,6 +158,7 @@ public class RefundServiceImpl implements RefundService {
 				    .isRefunded(false)
 				    .nodalOfficerApproval(Constants.Result.PENDING)
 				    .utrNumber("")
+				    .rrnNumber("")
 					.build();
 			
 			// TODO EMAIL SEND TO NODAL OFFICER
@@ -519,6 +523,7 @@ public class RefundServiceImpl implements RefundService {
                                         booking.setPaymentStatus(Constants.ROLLEDBACK);
                                         booking.setCancelTime(LocalDateTime.now());
                                         transactionsRepository.save(booking);
+                                        updateRefundDetails(bookingid, juspayRedeemDetail);
                                         log.debug("amount has been refunded successfully for booking id : {}, payment id : {}", bookingid, juspayRedeemDetail.getId());
                                     }
                                 }
@@ -541,6 +546,7 @@ public class RefundServiceImpl implements RefundService {
                                     booking.setBookingStatus(Constants.CANCEL_COMPLETE);
                                     booking.setPaymentStatus(Constants.ROLLEDBACK);
                                     transactionsRepository.save(booking);
+                                    updateRefundDetails(bookingid, juspayRedeemDetail);
                                     log.debug("amount has been refunded successfully for booking id : {}, PAYMENT ID : {}", bookingid, juspayRedeemDetail.getId());
                                 }
                             }
@@ -558,7 +564,22 @@ public class RefundServiceImpl implements RefundService {
         }
         return rollback;
     }
-
+	
+	@Transactional
+	private void updateRefundDetails(String bookingid,JuspayRedeemDetail juspayRedeemDetail) {
+//		refundDetailsRepository.updateRrn(juspayRedeemDetail.getRrn(), bookingid);
+		refundDetailsRepository.findByBookingId(bookingid).ifPresent(details -> {
+			details.setRrnNumber(juspayRedeemDetail.getRrn());
+			refundDetailsRepository.save(details);
+			log.info("Deatils saved successfuly", juspayRedeemDetail.getRrn());
+		});
+		
+		String s = "gift card";
+		Set<Character> set = new HashSet<>();
+          Optional<Character> date = s.chars().mapToObj(o -> (char) o).filter(o -> !set.add(o)).findFirst();
+	}
+	
+	
 
     private boolean gyftrRefund(String bookingId, Transactions booking) {
         boolean rollback = true;
