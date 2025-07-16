@@ -254,16 +254,13 @@ public class RefundServiceImpl implements RefundService {
 					value.setValue(authToken);
 					configurationRepository.save(value);
 				}
-				//cancelGiftCard("200250006950751");
 			}else {
 				ResponseEntity.ok(null);
 				log.info("failed to generate token, response: " ,new Gson().toJson(tokenResponse));
 			}
-			//return ResponseEntity.ok(tokenResponse);
 		} catch (Exception e) {
 			log.error("GIFT CARD ERROR: ", e);
 		}
-		//return ResponseEntity.ok(null);
 	}
 	
 	
@@ -273,6 +270,7 @@ public class RefundServiceImpl implements RefundService {
 		
 		Transactions transactions = this.getTransactions(singleRefundReq);
 		if (Objects.nonNull(transactions) && transactions.getBookingStatus().contains(Constants.CANCEL)) {
+			log.error("Aproval ",Message.ALREADY_PROCESSED);
 			return ResponseEntity.ok(InitiateRefundResponse.builder()
 					.bookingId(singleRefundReq.getBookingId())
 					.result(Result.ERROR)
@@ -337,12 +335,7 @@ public class RefundServiceImpl implements RefundService {
 						.message(Message.REFUND_REQUEST_ERROR)
 						.build());
 			}
-//			return ResponseEntity.ok(InitiateRefundResponse.builder()
-//					.bookingId(singleRefundReq.getBookingId())
-//					.result(Result.SUCCESS)
-//					.responseCode(RespCode.SUCCESS)
-//					.message(Message.REQUESTED_NODAL_OFFICER)
-//					.build());
+
 		}
 		
 		return ResponseEntity.ok(InitiateRefundResponse.builder()
@@ -577,6 +570,7 @@ public class RefundServiceImpl implements RefundService {
                     if (!ObjectUtils.isEmpty(status) && status.getResultType().equalsIgnoreCase("SUCCESS") &&
                             status.getStatus().equalsIgnoreCase("CONSUMED")) {
                         GyftrCancelationResponse cancel = refundUtility.cancel(bookingId, redeemDetail.getCoupon());
+                        log.debug("gyftr response {} :: ",cancel);
                         if (!ObjectUtils.isEmpty(cancel) && (cancel.getResultType().equalsIgnoreCase("SUCCESS")
                                 || cancel.getErrorCode().equalsIgnoreCase("E030"))) {
                             redeemDetail.setStatus(Constants.ROLLEDBACK);
@@ -590,9 +584,12 @@ public class RefundServiceImpl implements RefundService {
                         }
                     } 
                 }
+            } else {
+            	log.debug("gyftr redeem details not found :: ",bookingId);
+                rollback = false;
             }
         } catch (final Exception e) {
-            log.error("exception occured in gyftr rollback for booking id : {} : {}", bookingId, e.getMessage());
+            log.error("exception occured in gyftr rollback for booking id : {} : {} ", bookingId, e.getMessage());
             rollback = false;
         }
         return rollback;

@@ -70,7 +70,7 @@ public class ShowbizUtil {
 	            sbTransactionRepository.save(sbTransactions);
 	            return response;
 	        } catch (Exception e) {
-	        	log.error(e);
+	        	log.error("Showbiz sold status exception :: {} ",e);
 	        }
 	        return null;
 	    }
@@ -99,7 +99,7 @@ public class ShowbizUtil {
 	            sbTransactionRepository.save(sbTransactions);
 	            return response;
 	        } catch (Exception e) {
-	        	log.error(e);
+	        	log.error("Showbiz sold status fb exception :: {} ",e);
 	        }
 	        return null;
 	    }
@@ -142,7 +142,7 @@ public class ShowbizUtil {
 	            sbTransactionRepository.save(sbTransactions);
 	            return response;
 	        } catch (Exception e) {
-	        	log.error(utilities.error(e));
+	        	log.error("Showbiz cancel buy exception :: {} ",e);
 	        }
 	        return null;
 	    }

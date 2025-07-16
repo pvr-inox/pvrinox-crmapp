@@ -68,12 +68,13 @@ public class UserManagementServiceImpl implements UserManagementService{
 				}
 				modulesRepository.saveAll(modulesList);
 				returnObj = WSReturnObj.builder().msg("success").output("Module Created Sucessfully.").responseCode(200).result("sucess").build();
+				log.info("Module Created Sucessfully. {} :: ",request);
 				return ResponseEntity.ok(returnObj);
 			}
 			returnObj = WSReturnObj.builder().msg("error").output("Module Name Can Not Be Empty.").responseCode(204).result("error").build();
 			return ResponseEntity.ok(returnObj);
 		} catch (Exception e) {
-			log.error("Exception createModule {} : ",e);
+			log.error("Exception occured in create module {} : ",e);
 			returnObj = WSReturnObj.builder().msg("error").output("Error Occured Failed To Create Module").responseCode(500).result("error").build();
 			return ResponseEntity.ok(returnObj);
 		}
@@ -107,8 +108,10 @@ public class UserManagementServiceImpl implements UserManagementService{
 				roles.setStatus(request.status);
 				roleRepository.save(roles);
 				returnObj = WSReturnObj.builder().msg("success").output("Role Updated Successfully.").responseCode(200).result("sucess").build();
+				log.info("Role Updated Successfully. {} :: ",request);
 				return ResponseEntity.ok(returnObj);
 			} else {
+				log.info("Role Already Exist. {} :: ",request);
 				returnObj = WSReturnObj.builder().msg("error").output("Role Already Exist").responseCode(204).result("error").build();
 				return ResponseEntity.ok(returnObj);
 			}
@@ -119,10 +122,11 @@ public class UserManagementServiceImpl implements UserManagementService{
 			roles.setStatus(true);
 			roleRepository.save(roles);
 			returnObj = WSReturnObj.builder().msg("success").output("Role Created Successfully.").responseCode(200).result("sucess").build();
+			log.info("Role Created Successfully. {} :: ",request);
 			return ResponseEntity.ok(returnObj);
 		}
 		} catch (Exception e) {
-			log.error("Exception createModule {} : ",e);
+			log.error("Exception occured in create role {} : ",e);
 			returnObj = WSReturnObj.builder().msg("error").output("Error Occured Failed To Create Module").responseCode(500).result("error").build();
 			return ResponseEntity.ok(returnObj);
 		}
@@ -153,19 +157,22 @@ public class UserManagementServiceImpl implements UserManagementService{
 				users.setPassword(request.getPassword());
 				userRepository.save(users);
 				returnObj = WSReturnObj.builder().msg("success").output("User Updated Successfully.").responseCode(204).result("success").build();
+				log.info("User Updated Successfully. {} :: ",request);
 				return ResponseEntity.ok(returnObj);
 			}else {
 				returnObj = WSReturnObj.builder().msg("error").output("User Already Exist.").responseCode(204).result("error").build();
+				log.error("User Already Exist. {} :: ",request);
 				return ResponseEntity.ok(returnObj);
 			}
 		}else {
 			Users users = Users.builder().userFirstName(request.getUserFirstName()).userLastName(request.getUserLastName()).email(request.getEmail()).mobile(request.getMobile()).userRole(request.getUserRole()).status(request.isStatus()).build();
 			userRepository.save(users);
 			returnObj = WSReturnObj.builder().msg("success").output("User Created Successfully.").responseCode(200).result("sucess").build();
+			log.info("User Created Successfully. {} :: ",request);
 			return ResponseEntity.ok(returnObj);
 		}
 		} catch (Exception e) {
-			log.error("Exception createModule {} : ",e);
+			log.error("Exception occured in create user {} : ",e);
 			returnObj = WSReturnObj.builder().msg("error").output("Error Occured Failed To Create Module").responseCode(500).result("error").build();
 			return ResponseEntity.ok(returnObj);
 		}

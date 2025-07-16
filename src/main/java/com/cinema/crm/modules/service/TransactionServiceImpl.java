@@ -1,10 +1,7 @@
 package com.cinema.crm.modules.service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -47,6 +44,7 @@ public class TransactionServiceImpl implements TransactionService {
 		try {
 			
 			if(StringUtils.isEmpty(transactionReq.getMobile()) && StringUtils.isEmpty(transactionReq.getBookingId())) {
+				log.error("Mobile number and Booking id both can not be empty.");
 				returnObj.setMsg("Mobile number and Booking id both can not be empty.");
 				returnObj.setOutput(null);
 				returnObj.setResponseCode(201);
@@ -60,6 +58,7 @@ public class TransactionServiceImpl implements TransactionService {
 				returnObj.setOutput(refundList);
 				returnObj.setResponseCode(200);
 				returnObj.setResult("sucess");
+				log.info("Transaction data {} :: ",refundList.isEmpty() ? "No Data Found " : "success " , refundList);
 				return ResponseEntity.ok(returnObj);
 			}else {
 				String stringQuery = buildTransactionData(transactionReq);
@@ -71,6 +70,7 @@ public class TransactionServiceImpl implements TransactionService {
 					returnObj.setOutput(responseList);
 					returnObj.setResponseCode(200);
 					returnObj.setResult("sucess");
+					log.info("Transaction data {} :: ",responseList.isEmpty() ? "No Data Found " : "success " , responseList);
 					return ResponseEntity.ok(returnObj);
 			}
 
@@ -176,12 +176,14 @@ public class TransactionServiceImpl implements TransactionService {
 				returnObj.setOutput(null);
 				returnObj.setResponseCode(200);
 				returnObj.setResult("sucess");
+				log.info("Session Transaction data no record found {} :: " , booking);
 				return ResponseEntity.ok(returnObj);
 			} else {
 				returnObj.setMsg("success");
 				returnObj.setOutput(booking);
 				returnObj.setResponseCode(200);
 				returnObj.setResult("sucess");
+				log.info("Session Transaction data {} :: " , booking);
 				return ResponseEntity.ok(returnObj);
 			}
 
@@ -190,6 +192,7 @@ public class TransactionServiceImpl implements TransactionService {
 			returnObj.setOutput(null);
 			returnObj.setResponseCode(500);
 			returnObj.setResult("error");
+			log.error("Exception occured in Session Transaction {} :: ",e);
 			return ResponseEntity.ok(returnObj);
 		}
 	}
