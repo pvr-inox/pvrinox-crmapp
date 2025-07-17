@@ -84,6 +84,27 @@ public class TransactionServiceImpl implements TransactionService {
 		}
 
 	}
+	
+	@Override
+	public ResponseEntity<Object> getCancellableRefunds() {
+	    WSReturnObj<Object> returnObj = new WSReturnObj<>();
+	    try {
+	        List<RefundDetails> refundList = refundDetailsRepository.findByisRefundedFalse();
+	        returnObj.setMsg(refundList.isEmpty() ? "No Data Found" : "success");
+	        returnObj.setOutput(refundList);
+	        returnObj.setResponseCode(200);
+	        returnObj.setResult("success");
+	        return ResponseEntity.ok(returnObj);
+	    } catch (Exception e) {
+	        log.error("Exception in getCancellableRefunds(): ", e);
+	        returnObj.setMsg("error");
+	        returnObj.setOutput(null);
+	        returnObj.setResponseCode(500);
+	        returnObj.setResult("error");
+	        return ResponseEntity.ok(returnObj);
+	    }
+	}
+
 
 	private TransactionResp convertToTransactionResp(Transactions order) {
 		Optional<RefundDetails> data = refundDetailsRepository.findByBookingId(order.getId());

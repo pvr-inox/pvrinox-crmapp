@@ -30,4 +30,12 @@ public class TransactionContoller {
 	public ResponseEntity<Object> getSessionTtrans(@RequestParam long sessionId){
 		return transactionService.getSessionTtrans(sessionId);
 	}
+	
+	@GetMapping(value  = "cancelledtxn")
+	public ResponseEntity<Object> getCancellableRefunds() {
+	    return transactionService.getCancellableRefunds();
+	}
+
 }
+
+

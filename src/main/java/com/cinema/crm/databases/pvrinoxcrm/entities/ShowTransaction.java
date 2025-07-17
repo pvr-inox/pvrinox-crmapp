@@ -2,6 +2,8 @@ package com.cinema.crm.databases.pvrinoxcrm.entities;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -81,8 +84,19 @@ public class ShowTransaction {
     private String voucherId;
     private String voucherCode;
     private LocalDateTime redeemDate;
+//    @Transient 
+//    private boolean refundable;
+//
+//    public boolean isRefundable() {
+//        return refundable;
+//    }
+//
+//    public void setRefundable(boolean refundable) {
+//        this.refundable = refundable;
+//    }
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "movie_id")
     private Show show;
 }
