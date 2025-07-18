@@ -19,4 +19,9 @@ public class ShowController {
     public ResponseEntity<Object> saveShowWithTransactions(@RequestBody Show show) {
         return showService.saveShow(show);
     }
+    
+    @GetMapping("/cancelledshow")
+    public ResponseEntity<Object> getAllShowsWithRefundables() {
+        return showService.getAllShowsWithRefundableFlag();
+    }
 }

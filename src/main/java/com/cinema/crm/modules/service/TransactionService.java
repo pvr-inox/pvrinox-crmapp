@@ -9,4 +9,7 @@ public interface TransactionService {
 	ResponseEntity<Object> getAllTransactions(TransactionReq transactionReq);
 	
 	ResponseEntity<Object> getSessionTtrans(long sessionId);
+	
+	ResponseEntity<Object> getCancellableRefunds();
+
 }

@@ -1,10 +1,9 @@
 package com.cinema.crm.modules.service;
 
-import java.time.LocalDateTime;
+import java.text.DateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -12,8 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.cinema.crm.databases.pvrinox.entities.OrderBooking;
+import com.cinema.crm.databases.pvrinox.entities.PromoCodeRedeem;
 import com.cinema.crm.databases.pvrinox.entities.Transactions;
 import com.cinema.crm.databases.pvrinox.repositories.OrderBookingRepository;
+import com.cinema.crm.databases.pvrinox.repositories.PromoCodeRedeemRepository;
 import com.cinema.crm.databases.pvrinox.repositories.TransactionsRepository;
 import com.cinema.crm.databases.pvrinoxcrm.entities.RefundDetails;
 import com.cinema.crm.databases.pvrinoxcrm.repositories.RefundDetailsRepository;
@@ -33,12 +34,15 @@ public class TransactionServiceImpl implements TransactionService {
 	private final OrderBookingRepository orderBookingRepository;
 	private final TransactionsRepository transactionsRepository;
 	private final RefundDetailsRepository refundDetailsRepository;
+	private final PromoCodeRedeemRepository promoCodeRedeemRepository;
 
-	public TransactionServiceImpl(EntityManager entityManager, OrderBookingRepository orderBookingRepository,TransactionsRepository transactionsRepository,RefundDetailsRepository refundDetailsRepository) {
+	public TransactionServiceImpl(EntityManager entityManager, OrderBookingRepository orderBookingRepository,TransactionsRepository transactionsRepository,
+			RefundDetailsRepository refundDetailsRepository,PromoCodeRedeemRepository promoCodeRedeemRepository) {
 		this.entityManager = entityManager;
 		this.orderBookingRepository = orderBookingRepository;
 		this.transactionsRepository = transactionsRepository;
 		this.refundDetailsRepository = refundDetailsRepository;
+		this.promoCodeRedeemRepository = promoCodeRedeemRepository;
 	}
 
 	@Override
@@ -47,6 +51,7 @@ public class TransactionServiceImpl implements TransactionService {
 		try {
 			
 			if(StringUtils.isEmpty(transactionReq.getMobile()) && StringUtils.isEmpty(transactionReq.getBookingId())) {
+				log.error("Mobile number and Booking id both can not be empty.");
 				returnObj.setMsg("Mobile number and Booking id both can not be empty.");
 				returnObj.setOutput(null);
 				returnObj.setResponseCode(201);
@@ -60,6 +65,7 @@ public class TransactionServiceImpl implements TransactionService {
 				returnObj.setOutput(refundList);
 				returnObj.setResponseCode(200);
 				returnObj.setResult("sucess");
+				log.info("Transaction data {} {} :: ",refundList.isEmpty() ? "No Data Found " : "success " , refundList);
 				return ResponseEntity.ok(returnObj);
 			}else {
 				String stringQuery = buildTransactionData(transactionReq);
@@ -71,6 +77,7 @@ public class TransactionServiceImpl implements TransactionService {
 					returnObj.setOutput(responseList);
 					returnObj.setResponseCode(200);
 					returnObj.setResult("sucess");
+					log.info("Transaction data {} :: ",responseList.isEmpty() ? "No Data Found " : "success " , responseList);
 					return ResponseEntity.ok(returnObj);
 			}
 
@@ -84,12 +91,59 @@ public class TransactionServiceImpl implements TransactionService {
 		}
 
 	}
+	
+	@Override
+	public ResponseEntity<Object> getCancellableRefunds() {
+	    WSReturnObj<Object> returnObj = new WSReturnObj<>();
+	    try {
+	        List<RefundDetails> refundList = refundDetailsRepository.findByisRefundedFalse();
+	        returnObj.setMsg(refundList.isEmpty() ? "No Data Found" : "success");
+	        returnObj.setOutput(refundList);
+	        returnObj.setResponseCode(200);
+	        returnObj.setResult("success");
+	        return ResponseEntity.ok(returnObj);
+	    } catch (Exception e) {
+	        log.error("Exception in getCancellableRefunds(): ", e);
+	        returnObj.setMsg("error");
+	        returnObj.setOutput(null);
+	        returnObj.setResponseCode(500);
+	        returnObj.setResult("error");
+	        return ResponseEntity.ok(returnObj);
+	    }
+	}
+
 
 	private TransactionResp convertToTransactionResp(Transactions order) {
+		DateTimeFormatter format =   DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 		Optional<RefundDetails> data = refundDetailsRepository.findByBookingId(order.getId());
 		RefundDetails refundDetails = new RefundDetails();
 		if(data.isPresent()) {
 			refundDetails = data.get();
+		}else {
+			refundDetails = RefundDetails.builder()
+				    .id(null)
+				    .bookingId("")
+				    .eventName("")
+				    .customerName("")
+				    .refundType("")
+				    .refundStatus("")
+				    .refundReasons("")
+				    .totalAmount("")
+				    .refundAmount("")
+				    .refund("")
+				    .paymentGateway("")
+				    .remarks("")
+				    .seatNo("")
+				    .paymentMode("")
+				    .voucherCode("")
+				    .voucherStatus("")
+				    .submittedDate(null)
+				    .isRefunded(false)
+				    .nodalOfficerApproval("")
+				    .utrNumber("")
+				    .rrnNumber("")
+				    .build();
+
 		}
 		TransactionResp resp = new TransactionResp();
 		resp.bookingId = order.getId();
@@ -98,16 +152,32 @@ public class TransactionServiceImpl implements TransactionService {
 		resp.mobile = order.getMobile();
 		resp.seatNumber = order.getSeats();
 		resp.paymodes = order.getPaymode();
-		resp.vouchers = order.getCvpVouchers();
-		resp.voucherStatus = "";
+		if("PROMOCODE".equals(order.getCouponType())) {
+			Optional<PromoCodeRedeem> promoCodeDetails = promoCodeRedeemRepository.findByOrderIdEx(order.getId());
+			if(promoCodeDetails.isPresent()) {
+				PromoCodeRedeem  promoCodeRedeem = promoCodeDetails.get();
+				resp.voucherCode = promoCodeRedeem.getCoupon();
+				resp.voucherStatus = promoCodeRedeem.getStatus();
+			}
+		}else {
+			resp.voucherCode = "";
+			resp.voucherStatus = "";
+		}
 		resp.cancelReasons = refundDetails.getRemarks();
 		resp.cancelDate = order.getCreatedAt().toString();
-		resp.refunded = false;
+		resp.isRefunded = refundDetails.getIsRefunded() == null ? false : refundDetails.getIsRefunded();
 		resp.totalAmount = order.getTotalTicketPrice() + order.getFbTotalPrice();
-		resp.approval = "";
 		resp.refundStatus = refundDetails.getRefundStatus();
-		resp.utrNumber = "";
+		resp.utrNumber = refundDetails.getUtrNumber();
 		resp.customerName = order.getName();
+		resp.paymentStatus = order.getPaymentStatus();
+		resp.bookingStatus = order.getBookingStatus();
+		resp.showEventDateTime =  order.getShowTime().format(format);
+		resp.cinemaName = order.getTheaterName();
+		resp.city = order.getCityName();
+		resp.submittedDate = refundDetails.getSubmittedDate() == null ? "" : refundDetails.getSubmittedDate().format(format);
+		resp.nodalOfficer = refundDetails.getNodalOfficerApproval();
+		resp.rrnNumber = refundDetails.getRrnNumber();
 		return resp;
 	}
 
@@ -176,12 +246,14 @@ public class TransactionServiceImpl implements TransactionService {
 				returnObj.setOutput(null);
 				returnObj.setResponseCode(200);
 				returnObj.setResult("sucess");
+				log.info("Session Transaction data no record found {} :: " , booking);
 				return ResponseEntity.ok(returnObj);
 			} else {
 				returnObj.setMsg("success");
 				returnObj.setOutput(booking);
 				returnObj.setResponseCode(200);
 				returnObj.setResult("sucess");
+				log.info("Session Transaction data {} :: " , booking);
 				return ResponseEntity.ok(returnObj);
 			}
 
@@ -190,6 +262,7 @@ public class TransactionServiceImpl implements TransactionService {
 			returnObj.setOutput(null);
 			returnObj.setResponseCode(500);
 			returnObj.setResult("error");
+			log.error("Exception occured in Session Transaction {} :: ",e);
 			return ResponseEntity.ok(returnObj);
 		}
 	}

@@ -56,6 +56,8 @@ public class RefundDetails {
     private String nodalOfficerApproval;
     @Column(name = "utr_number")
     private String utrNumber;
+    @Column(name = "rrn_number")
+    private String rrnNumber;
 
 
 }

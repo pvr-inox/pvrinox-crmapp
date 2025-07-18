@@ -21,6 +21,7 @@ import com.cinema.crm.databases.pvrinox.entities.SBTransactions;
 import com.cinema.crm.databases.pvrinox.repositories.SBTransactionRepository;
 import com.cinema.crm.modules.model.OrderCancelData;
 import com.cinema.crm.modules.model.OrderCommitData;
+import com.cinema.crm.modules.model.ReqFnMarkRefund;
 import com.cinema.crm.modules.model.ReqRefundTrans;
 
 import lombok.extern.log4j.Log4j2;
@@ -70,7 +71,7 @@ public class ShowbizUtil {
 	            sbTransactionRepository.save(sbTransactions);
 	            return response;
 	        } catch (Exception e) {
-	        	log.error(e);
+	        	log.error("Showbiz sold status exception :: {} ",e);
 	        }
 	        return null;
 	    }
@@ -99,7 +100,7 @@ public class ShowbizUtil {
 	            sbTransactionRepository.save(sbTransactions);
 	            return response;
 	        } catch (Exception e) {
-	        	log.error(e);
+	        	log.error("Showbiz sold status fb exception :: {} ",e);
 	        }
 	        return null;
 	    }
@@ -142,7 +143,7 @@ public class ShowbizUtil {
 	            sbTransactionRepository.save(sbTransactions);
 	            return response;
 	        } catch (Exception e) {
-	        	log.error(utilities.error(e));
+	        	log.error("Showbiz cancel buy exception :: {} ",e);
 	        }
 	        return null;
 	    }
@@ -301,6 +302,8 @@ public class ShowbizUtil {
 	        }
 	        return null;
 	    }
+
+	 
 	
 
 }

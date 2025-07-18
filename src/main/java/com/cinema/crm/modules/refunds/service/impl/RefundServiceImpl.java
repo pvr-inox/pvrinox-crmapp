@@ -7,11 +7,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
@@ -66,6 +68,7 @@ import com.cinema.crm.modules.utils.RefundUtility;
 import com.cinema.crm.modules.utils.ShowbizUtil;
 import com.google.gson.Gson;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
@@ -155,6 +158,7 @@ public class RefundServiceImpl implements RefundService {
 				    .isRefunded(false)
 				    .nodalOfficerApproval(Constants.Result.PENDING)
 				    .utrNumber("")
+				    .rrnNumber("")
 					.build();
 			
 			// TODO EMAIL SEND TO NODAL OFFICER
@@ -254,16 +258,13 @@ public class RefundServiceImpl implements RefundService {
 					value.setValue(authToken);
 					configurationRepository.save(value);
 				}
-				//cancelGiftCard("200250006950751");
 			}else {
 				ResponseEntity.ok(null);
 				log.info("failed to generate token, response: " ,new Gson().toJson(tokenResponse));
 			}
-			//return ResponseEntity.ok(tokenResponse);
 		} catch (Exception e) {
 			log.error("GIFT CARD ERROR: ", e);
 		}
-		//return ResponseEntity.ok(null);
 	}
 	
 	
@@ -273,6 +274,7 @@ public class RefundServiceImpl implements RefundService {
 		
 		Transactions transactions = this.getTransactions(singleRefundReq);
 		if (Objects.nonNull(transactions) && transactions.getBookingStatus().contains(Constants.CANCEL)) {
+			log.error("Aproval ",Message.ALREADY_PROCESSED);
 			return ResponseEntity.ok(InitiateRefundResponse.builder()
 					.bookingId(singleRefundReq.getBookingId())
 					.result(Result.ERROR)
@@ -337,12 +339,7 @@ public class RefundServiceImpl implements RefundService {
 						.message(Message.REFUND_REQUEST_ERROR)
 						.build());
 			}
-//			return ResponseEntity.ok(InitiateRefundResponse.builder()
-//					.bookingId(singleRefundReq.getBookingId())
-//					.result(Result.SUCCESS)
-//					.responseCode(RespCode.SUCCESS)
-//					.message(Message.REQUESTED_NODAL_OFFICER)
-//					.build());
+
 		}
 		
 		return ResponseEntity.ok(InitiateRefundResponse.builder()
@@ -526,6 +523,7 @@ public class RefundServiceImpl implements RefundService {
                                         booking.setPaymentStatus(Constants.ROLLEDBACK);
                                         booking.setCancelTime(LocalDateTime.now());
                                         transactionsRepository.save(booking);
+                                        updateRefundDetails(bookingid, juspayRedeemDetail);
                                         log.debug("amount has been refunded successfully for booking id : {}, payment id : {}", bookingid, juspayRedeemDetail.getId());
                                     }
                                 }
@@ -548,6 +546,7 @@ public class RefundServiceImpl implements RefundService {
                                     booking.setBookingStatus(Constants.CANCEL_COMPLETE);
                                     booking.setPaymentStatus(Constants.ROLLEDBACK);
                                     transactionsRepository.save(booking);
+                                    updateRefundDetails(bookingid, juspayRedeemDetail);
                                     log.debug("amount has been refunded successfully for booking id : {}, PAYMENT ID : {}", bookingid, juspayRedeemDetail.getId());
                                 }
                             }
@@ -565,7 +564,22 @@ public class RefundServiceImpl implements RefundService {
         }
         return rollback;
     }
-
+	
+	@Transactional
+	private void updateRefundDetails(String bookingid,JuspayRedeemDetail juspayRedeemDetail) {
+//		refundDetailsRepository.updateRrn(juspayRedeemDetail.getRrn(), bookingid);
+		refundDetailsRepository.findByBookingId(bookingid).ifPresent(details -> {
+			details.setRrnNumber(juspayRedeemDetail.getRrn());
+			refundDetailsRepository.save(details);
+			log.info("Deatils saved successfuly", juspayRedeemDetail.getRrn());
+		});
+		
+		String s = "gift card";
+		Set<Character> set = new HashSet<>();
+          Optional<Character> date = s.chars().mapToObj(o -> (char) o).filter(o -> !set.add(o)).findFirst();
+	}
+	
+	
 
     private boolean gyftrRefund(String bookingId, Transactions booking) {
         boolean rollback = true;
@@ -577,6 +591,7 @@ public class RefundServiceImpl implements RefundService {
                     if (!ObjectUtils.isEmpty(status) && status.getResultType().equalsIgnoreCase("SUCCESS") &&
                             status.getStatus().equalsIgnoreCase("CONSUMED")) {
                         GyftrCancelationResponse cancel = refundUtility.cancel(bookingId, redeemDetail.getCoupon());
+                        log.debug("gyftr response {} :: ",cancel);
                         if (!ObjectUtils.isEmpty(cancel) && (cancel.getResultType().equalsIgnoreCase("SUCCESS")
                                 || cancel.getErrorCode().equalsIgnoreCase("E030"))) {
                             redeemDetail.setStatus(Constants.ROLLEDBACK);
@@ -590,9 +605,12 @@ public class RefundServiceImpl implements RefundService {
                         }
                     } 
                 }
+            } else {
+            	log.debug("gyftr redeem details not found :: ",bookingId);
+                rollback = false;
             }
         } catch (final Exception e) {
-            log.error("exception occured in gyftr rollback for booking id : {} : {}", bookingId, e.getMessage());
+            log.error("exception occured in gyftr rollback for booking id : {} : {} ", bookingId, e.getMessage());
             rollback = false;
         }
         return rollback;
