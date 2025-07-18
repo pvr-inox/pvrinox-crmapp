@@ -17,15 +17,21 @@ public class TransactionResp {
     public String mobile;
     public String seatNumber;
     public String paymodes;
-    public String vouchers;
+    public String voucherCode;
     public String voucherStatus;
     public String cancelReasons;
     public String cancelDate;
-    public boolean refunded;
+    public boolean isRefunded;
     public double totalAmount;
-    public String approval;
     public String refundStatus;
     public String utrNumber;
     public String customerName;
-
+    public String paymentStatus;
+    public String bookingStatus;
+    public String showEventDateTime;
+    public String cinemaName;
+    public String city;
+    public String submittedDate;
+    public String nodalOfficer; // status from nodal officer
+    public String rrnNumber;
 }
